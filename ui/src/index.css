@@ -45,6 +45,43 @@
   --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
 }
 
+:root.light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-light: rgba(15, 23, 42, 0.05);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --accent-purple: #7c3aed;
+  --accent-purple-glow: rgba(124, 58, 237, 0.15);
+  --accent-blue: #2563eb;
+  --accent-blue-glow: rgba(37, 99, 235, 0.15);
+  --accent-cyan: #0891b2;
+  --accent-cyan-glow: rgba(8, 145, 178, 0.15);
+
+  --status-ready: #059669;
+  --status-ready-bg: rgba(5, 150, 105, 0.08);
+  --status-ready-border: rgba(5, 150, 105, 0.2);
+
+  --status-pending: #d97706;
+  --status-pending-bg: rgba(217, 119, 6, 0.08);
+  --status-pending-border: rgba(217, 119, 6, 0.2);
+
+  --status-error: #dc2626;
+  --status-error-bg: rgba(220, 38, 38, 0.08);
+  --status-error-border: rgba(220, 38, 38, 0.2);
+
+  --status-terminating: #db2777;
+  --status-terminating-bg: rgba(219, 39, 119, 0.08);
+  --status-terminating-border: rgba(219, 39, 119, 0.2);
+
+  --shadow-glow: 0 4px 20px rgba(124, 58, 237, 0.08);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -99,4 +136,22 @@ a:hover {
 
 button {
   font-family: var(--font-sans);
+}
+
+/* Light Theme Overrides */
+:root.light .btn-primary {
+  color: #ffffff;
+}
+
+:root.light .filter-btn.active, 
+:root.light .filter-btn:hover {
+  color: #ffffff;
+}
+
+:root.light .menu-item-btn.active .item-count {
+  color: #ffffff;
+}
+
+:root.light .custom-table th {
+  background: transparent;
 }

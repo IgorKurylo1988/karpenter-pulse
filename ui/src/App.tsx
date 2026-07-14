@@ -6,11 +6,13 @@ import {
   Server,
   Cpu,
   HardDrive,
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 // Shared Types
-import type { NodePool, EC2NodeClass, NodeClaim, K8sNode, UnscheduledPod, SpotAlert } from './types';
+import type { NodePool, EC2NodeClass, NodeClaim, K8sNode, UnscheduledPod, SpotAlert, LogEntry } from './types';
 
 // Modular Components
 import { MetricCard } from './components/MetricCard';
@@ -150,13 +152,13 @@ const INITIAL_PENDING_PODS: UnscheduledPod[] = [
   }
 ];
 
-const INITIAL_LOGS = [
-  '[2026-07-13T10:01:00Z] INFO  karpenter  Starting controller manager...',
-  '[2026-07-13T10:01:05Z] INFO  karpenter  Registered 2 NodePools, 2 EC2NodeClasses',
-  '[2026-07-13T10:01:10Z] INFO  karpenter  Discovered subnets: [subnet-0123456789abcdef0, subnet-0987654321fedcba0]',
-  '[2026-07-13T10:01:12Z] INFO  karpenter  Discovered security groups: [sg-0123456789abcdef0]',
-  '[2026-07-13T10:02:15Z] INFO  karpenter  Watching cluster resources; 2 active Karpenter nodes detected',
-  '[2026-07-13T10:05:48Z] WARNING karpenter Pod "finance/payment-processor-deployment-55d648-j2h8l" is unschedulable; triggering simulation scan...'
+const INITIAL_LOGS: LogEntry[] = [
+  { timestamp: '2026-07-13T10:01:00Z', level: 'INFO', message: 'karpenter  Starting controller manager...' },
+  { timestamp: '2026-07-13T10:01:05Z', level: 'INFO', message: 'karpenter  Registered 2 NodePools, 2 EC2NodeClasses' },
+  { timestamp: '2026-07-13T10:01:10Z', level: 'INFO', message: 'karpenter  Discovered subnets: [subnet-0123456789abcdef0, subnet-0987654321fedcba0]' },
+  { timestamp: '2026-07-13T10:01:12Z', level: 'INFO', message: 'karpenter  Discovered security groups: [sg-0123456789abcdef0]' },
+  { timestamp: '2026-07-13T10:02:15Z', level: 'INFO', message: 'karpenter  Watching cluster resources; 2 active Karpenter nodes detected' },
+  { timestamp: '2026-07-13T10:05:48Z', level: 'WARNING', message: 'karpenter Pod "finance/payment-processor-deployment-55d648-j2h8l" is unschedulable; triggering simulation scan...' }
 ];
 
 export default function App() {
@@ -172,7 +174,7 @@ export default function App() {
   const [nodeClaims, setNodeClaims] = useState<NodeClaim[]>(INITIAL_NODE_CLAIMS);
   const [nodes, setNodes] = useState<K8sNode[]>(INITIAL_NODES);
   const [pendingPods, setPendingPods] = useState<UnscheduledPod[]>(INITIAL_PENDING_PODS);
-  const [logs, setLogs] = useState<string[]>(INITIAL_LOGS);
+  const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
   const [alerts, setAlerts] = useState<SpotAlert[]>([]);
   const [dataSource, setDataSource] = useState<'sandbox' | 'cluster'>('sandbox');
   
@@ -180,6 +182,22 @@ export default function App() {
   const [isSandboxMode, setIsSandboxMode] = useState<boolean>(true);
   const [isApiAvailable, setIsApiAvailable] = useState<boolean>(false);
   const [pricingMode, setPricingMode] = useState<'actual' | 'ondemand'>('actual');
+
+  // Theme state & persistence
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved !== 'light';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.add('light');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   // Consolidation Confirmation Modal State
   const [nodeToConsolidate, setNodeToConsolidate] = useState<string | null>(null);
@@ -366,7 +384,7 @@ export default function App() {
   // Helper log function
   const addLog = (message: string, level: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR' = 'INFO') => {
     const timestamp = new Date().toISOString();
-    setLogs(prev => [...prev, `[${timestamp}] ${level.padEnd(7)} ${message}`]);
+    setLogs(prev => [...prev, { timestamp, level, message }]);
   };
 
   // ==========================================
@@ -655,6 +673,23 @@ export default function App() {
               animation: 'pulse-glow 1.5s infinite'
             }}></span>
             {isSandboxMode ? 'Mode: Sandbox' : 'Mode: Live'}
+          </button>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setIsDarkMode(prev => !prev)}
+            style={{
+              padding: '0.45rem',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              cursor: 'pointer'
+            }}
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <button className="btn btn-secondary" onClick={() => {
             addLog("Manual refresh triggered. Synchronizing CRD state...", "INFO");
@@ -1039,7 +1074,7 @@ export default function App() {
                 disabled={confirmInputName !== nodeToConsolidate}
                 style={{
                   backgroundColor: confirmInputName === nodeToConsolidate ? 'var(--status-error)' : 'var(--bg-tertiary)',
-                  color: confirmInputName === nodeToConsolidate ? 'var(--text-primary)' : 'var(--text-muted)',
+                  color: confirmInputName === nodeToConsolidate ? '#ffffff' : 'var(--text-muted)',
                   border: 'none',
                   cursor: confirmInputName === nodeToConsolidate ? 'pointer' : 'not-allowed',
                   opacity: confirmInputName === nodeToConsolidate ? 1 : 0.5,

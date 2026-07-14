@@ -71,3 +71,9 @@ export interface SpotAlert {
   deadline: string;
   countdownSeconds: number;
 }
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  message: string;
+}

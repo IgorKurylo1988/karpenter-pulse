@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  karpenter-pulse-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - SQS_QUEUE_URL=
+      - AWS_REGION=us-east-1
+      # Running without kubeconfig mounts forces mock fallback mode in cluster API.
+    networks:
+      - karpenter-pulse-net
+
+  karpenter-pulse-frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - BACKEND_API_URL=http://karpenter-pulse-backend:4000
+    depends_on:
+      - karpenter-pulse-backend
+    networks:
+      - karpenter-pulse-net
+
+networks:
+  karpenter-pulse-net:
+    driver: bridge

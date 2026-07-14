@@ -1,0 +1,94 @@
+name: Helm Chart Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm/**'
+  workflow_call:
+    inputs:
+      tag_name:
+        description: 'Git tag version (e.g. v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  id-token: write # Required for Google Workload Identity Federation
+  contents: write # Required to commit and push changes back to the repository
+
+jobs:
+  helm-publish:
+    name: Lint, Package & Publish Helm Charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: main # Check out main branch to allow committing updates directly to it
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Login to Google Artifact Registry
+        run: |
+          echo "${{ steps.auth.outputs.access_token }}" | helm registry login us-docker.pkg.dev --username oauth2accesstoken --password-stdin
+
+      - name: Bump Chart Versions (SemVer)
+        if: ${{ inputs.tag_name != '' }}
+        run: |
+          echo "Bumping chart versions using tag: ${{ inputs.tag_name }}"
+          python .github/scripts/bump-version.py helm/Chart.yaml ${{ inputs.tag_name }}
+          python .github/scripts/bump-version.py helm/charts/backend/Chart.yaml ${{ inputs.tag_name }}
+          python .github/scripts/bump-version.py helm/charts/frontend/Chart.yaml ${{ inputs.tag_name }}
+
+      - name: Commit and Push Version Changes
+        if: ${{ inputs.tag_name != '' }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add helm/Chart.yaml helm/charts/backend/Chart.yaml helm/charts/frontend/Chart.yaml
+          
+          # Using [skip ci] in the commit message ensures we do not trigger a recursive workflow run
+          git commit -m "chore(release): bump chart version & appVersion to ${{ inputs.tag_name }} [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:main
+
+      - name: Lint Helm Charts
+        run: |
+          helm lint helm/charts/backend
+          helm lint helm/charts/frontend
+          helm lint helm
+
+      - name: Package & Push Subcharts
+        run: |
+          # Package backend subchart
+          helm package helm/charts/backend --destination /tmp
+          # Push backend subchart to Google Artifact Registry OCI
+          helm push /tmp/backend-*.tgz oci://us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+          
+          # Package frontend subchart
+          helm package helm/charts/frontend --destination /tmp
+          # Push frontend subchart to Google Artifact Registry OCI
+          helm push /tmp/frontend-*.tgz oci://us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+
+      - name: Update Chart Dependencies
+        run: |
+          # Package subcharts locally inside main chart folder
+          helm dependency build helm
+
+      - name: Package & Push Umbrella Chart
+        run: |
+          # Package main umbrella chart
+          helm package helm --destination /tmp
+          # Push main umbrella chart to Google Artifact Registry OCI
+          helm push /tmp/karpenter-pulse-*.tgz oci://us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}

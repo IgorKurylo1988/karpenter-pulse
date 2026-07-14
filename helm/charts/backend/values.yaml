@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: us-docker.pkg.dev/GCP_PROJECT_ID/GCP_REPOSITORY/karpenter-pulse-backend
+  pullPolicy: IfNotPresent
+  tag: ""
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 4000
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Cloud configurations injected via ConfigMap
+config:
+  awsRegion: "us-east-1"
+  sqsQueueUrl: ""
+  clusterName: "my-cluster"
+  logLevels: "INFO,SUCCESS,WARNING,ERROR"
+  karpenterNamespace: "karpenter"
+  karpenterLabelSelector: "app.kubernetes.io/name=karpenter"

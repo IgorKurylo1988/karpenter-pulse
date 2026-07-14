@@ -279,6 +279,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 /* Filter Controls Bar */
@@ -560,6 +561,7 @@
 .fill-blue { background-color: var(--accent-blue); }
 .fill-orange { background-color: var(--status-pending); }
 .fill-red { background-color: var(--status-error); }
+.fill-cyan { background-color: var(--accent-cyan); }
 
 .progress-labels {
   display: flex;
