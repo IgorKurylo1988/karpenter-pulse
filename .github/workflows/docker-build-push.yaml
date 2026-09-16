@@ -15,7 +15,9 @@ on:
 permissions:
   id-token: write # Required for Google Workload Identity Federation
   contents: write # Required for committing changes back via the called Helm workflow
-
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REPOSITORY: karpenter-pulse
 jobs:
   build-push-backend:
     name: Build & Push Go Backend
@@ -34,22 +36,20 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
           registry: us-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/karpenter-pulse-backend
+          images: us-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/server
           tags: |
             type=semver,pattern={{version}}
             type=sha,prefix=,suffix=,format=short
@@ -83,22 +83,20 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
           registry: us-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/karpenter-pulse-frontend
+          images: us-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/ui
           tags: |
             type=semver,pattern={{version}}
             type=sha,prefix=,suffix=,format=short

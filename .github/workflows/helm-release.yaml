@@ -32,17 +32,9 @@ jobs:
         with:
           version: v3.14.0
 
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          token_format: 'access_token'
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
       - name: Login to Google Artifact Registry
         run: |
-          echo "${{ steps.auth.outputs.access_token }}" | helm registry login us-docker.pkg.dev --username oauth2accesstoken --password-stdin
+          echo '${{ secrets.GCP_SA_KEY }}' | helm registry login us-docker.pkg.dev --username _json_key --password-stdin
 
       - name: Bump Chart Versions (SemVer)
         if: ${{ inputs.tag_name != '' }}
