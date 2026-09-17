@@ -9,9 +9,8 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
----
 {{- end }}
-
+---
 {{- if .Values.rbac.create -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -38,6 +37,7 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch", "delete"]
+    
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
