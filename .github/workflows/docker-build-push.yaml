@@ -41,7 +41,7 @@ jobs:
       - name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
-          registry: europe-north1.pkg.dev
+          registry: europe-north1-docker.pkg.dev
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
 
@@ -49,7 +49,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: europe-north1.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/server
+          images: europe-north1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/server
           tags: |
             type=semver,pattern={{version}}
             type=sha,prefix=,suffix=,format=short
@@ -88,7 +88,7 @@ jobs:
       - name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
-          registry: europe-north1.pkg.dev
+          registry: europe-north1-docker.pkg.dev
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
 
@@ -96,7 +96,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: europe-north1.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/ui
+          images: europe-north1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/ui
           tags: |
             type=semver,pattern={{version}}
             type=sha,prefix=,suffix=,format=short

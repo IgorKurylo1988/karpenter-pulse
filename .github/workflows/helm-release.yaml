@@ -34,7 +34,7 @@ jobs:
 
       - name: Login to Google Artifact Registry
         run: |
-          echo '${{ secrets.GCP_SA_KEY }}' | helm registry login europe-north1.pkg.dev --username _json_key --password-stdin
+          echo '${{ secrets.GCP_SA_KEY }}' | helm registry login europe-north1-docker.pkg.dev --username _json_key --password-stdin
 
       - name: Bump Chart Versions (SemVer)
         if: ${{ inputs.tag_name != '' }}
@@ -66,12 +66,12 @@ jobs:
           # Package backend subchart
           helm package helm/charts/backend --destination /tmp
           # Push backend subchart to Google Artifact Registry OCI
-          helm push /tmp/backend-*.tgz oci://europe-north1.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+          helm push /tmp/backend-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
           
           # Package frontend subchart
           helm package helm/charts/frontend --destination /tmp
           # Push frontend subchart to Google Artifact Registry OCI
-          helm push /tmp/frontend-*.tgz oci://europe-north1.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+          helm push /tmp/frontend-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
 
       - name: Update Chart Dependencies
         run: |
@@ -83,4 +83,4 @@ jobs:
           # Package main umbrella chart
           helm package helm --destination /tmp
           # Push main umbrella chart to Google Artifact Registry OCI
-          helm push /tmp/karpenter-pulse-*.tgz oci://europe-north1.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+          helm push /tmp/karpenter-pulse-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
