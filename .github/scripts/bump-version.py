@@ -52,6 +52,11 @@ def update_chart_yaml(file_path, new_app_version):
             quotes_match = re.match(r'^appVersion:\s*(["\']?).*$', line)
             quote = quotes_match.group(1) if quotes_match else '"'
             new_lines.append(f"appVersion: {quote}{new_app_version}{quote}\n")
+        elif re.match(r'^\s+version:\s*', line):
+            quotes_match = re.match(r'^(\s*version:\s*)(["\']?).*$', line)
+            prefix = quotes_match.group(1)
+            quote = quotes_match.group(2) if quotes_match else ''
+            new_lines.append(f"{prefix}{quote}{updated_version}{quote}\n")
         else:
             new_lines.append(line)
 
