@@ -3,14 +3,24 @@ name: Helm Chart Release
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'helm/**'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Git tag version to bump (e.g. v1.2.3, or leave blank to package current version)'
+        required: false
+        default: ''
+        type: string
   workflow_call:
     inputs:
       tag_name:
         description: 'Git tag version (e.g. v1.2.3)'
-        required: true
+        required: false
+        default: ''
         type: string
 
 permissions:
@@ -22,10 +32,20 @@ jobs:
     name: Lint, Package & Publish Helm Charts
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve Version Tag
+        id: resolve-tag
+        run: |
+          TAG="${{ inputs.tag_name }}"
+          if [ -z "$TAG" ] && [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "Resolved Tag Name: '$TAG'"
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: main # Check out main branch to allow committing updates directly to it
+          ref: master # Check out master branch to allow committing updates directly to it
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -37,23 +57,23 @@ jobs:
           echo '${{ secrets.GCP_SA_KEY }}' | helm registry login europe-north1-docker.pkg.dev --username _json_key --password-stdin
 
       - name: Bump Chart Versions (SemVer)
-        if: ${{ inputs.tag_name != '' }}
+        if: steps.resolve-tag.outputs.tag_name != ''
         run: |
-          echo "Bumping chart versions using tag: ${{ inputs.tag_name }}"
-          python .github/scripts/bump-version.py helm/Chart.yaml ${{ inputs.tag_name }}
-          python .github/scripts/bump-version.py helm/charts/backend/Chart.yaml ${{ inputs.tag_name }}
-          python .github/scripts/bump-version.py helm/charts/frontend/Chart.yaml ${{ inputs.tag_name }}
+          echo "Bumping chart versions using tag: ${{ steps.resolve-tag.outputs.tag_name }}"
+          python .github/scripts/bump-version.py helm/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
+          python .github/scripts/bump-version.py helm/charts/backend/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
+          python .github/scripts/bump-version.py helm/charts/frontend/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
 
       - name: Commit and Push Version Changes
-        if: ${{ inputs.tag_name != '' }}
+        if: steps.resolve-tag.outputs.tag_name != ''
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add helm/Chart.yaml helm/charts/backend/Chart.yaml helm/charts/frontend/Chart.yaml
           
           # Using [skip ci] in the commit message ensures we do not trigger a recursive workflow run
-          git commit -m "chore(release): bump chart version & appVersion to ${{ inputs.tag_name }} [skip ci]" || echo "No changes to commit"
-          git push origin HEAD:main
+          git commit -m "chore(release): bump chart version & appVersion to ${{ steps.resolve-tag.outputs.tag_name }} [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:master
 
       - name: Lint Helm Charts
         run: |
