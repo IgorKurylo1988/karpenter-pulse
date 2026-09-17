@@ -7,18 +7,18 @@ on:
     paths:
       - 'helm/**'
     tags:
-      - 'v*'
+      - 'karpenter-pulse-v*'
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Git tag version to bump (e.g. v1.2.3, or leave blank to package current version)'
+        description: 'Git tag version to bump (e.g. karpenter-pulse-v, or leave blank to package current version)'
         required: false
         default: ''
         type: string
   workflow_call:
     inputs:
       tag_name:
-        description: 'Git tag version (e.g. v1.2.3)'
+        description: 'Git tag version (e.g. karpenter-pulse-v1.0.0)'
         required: false
         default: ''
         type: string
