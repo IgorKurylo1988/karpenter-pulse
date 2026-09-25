@@ -73,7 +73,43 @@ export interface SpotAlert {
 }
 
 export interface LogEntry {
+  id?: string;
   timestamp: string;
   level: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  category?: 'PROVISIONING' | 'CONSOLIDATION' | 'DISRUPTION' | 'INTERRUPTION' | 'K8S_EVENT' | 'SYSTEM';
   message: string;
+  nodePool?: string;
+  nodeClaim?: string;
+  nodeName?: string;
+  details?: Record<string, any>;
+}
+
+export interface NodePoolPricing {
+  name: string;
+  hourlyCost: number;
+  nodeCount: number;
+  spotCount: number;
+  onDemandCost: number;
+  savingsCost: number;
+}
+
+export interface PricingSummary {
+  totalHourlyCost: number;
+  onDemandBaselineHourly: number;
+  totalHourlySavings: number;
+  savingsPercentage: number;
+  projectedMonthlySpend: number;
+  projectedMonthlySavings: number;
+  currency: string;
+  spotRatio: number;
+  gravitonRatio: number;
+  nodePoolBreakdown: NodePoolPricing[];
+  timestamp: string;
+}
+
+export interface LogQueryResponse {
+  total: number;
+  leaderPod?: string;
+  storage: string;
+  logs: LogEntry[];
 }

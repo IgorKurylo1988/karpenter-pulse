@@ -4,15 +4,17 @@ import (
 	"log"
 	"net/http"
 	
+	"karpenter-pulse-backend/internal/pricing"
 	"karpenter-pulse-backend/internal/state"
 )
 
 type HandlerContext struct {
-	State *state.ClusterState
+	State   *state.ClusterState
+	Pricing *pricing.PricingEngine
 }
 
-func NewHandlerContext(s *state.ClusterState) *HandlerContext {
-	return &HandlerContext{State: s}
+func NewHandlerContext(s *state.ClusterState, p *pricing.PricingEngine) *HandlerContext {
+	return &HandlerContext{State: s, Pricing: p}
 }
 
 func CorsAndLogMiddleware(next http.Handler) http.Handler {

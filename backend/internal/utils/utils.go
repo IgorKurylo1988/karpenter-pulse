@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"strings"
 	"time"
+
+	"karpenter-pulse-backend/internal/pricing"
 )
 
 func GetAgeString(t time.Time) string {
@@ -21,25 +22,12 @@ func GetAgeString(t time.Time) string {
 }
 
 func GetEstimatedCost(instanceType string, isSpot bool) float64 {
-	basePrice := 0.096
-	if strings.Contains(instanceType, "medium") {
-		basePrice = 0.0336
-	} else if strings.Contains(instanceType, "large") && !strings.Contains(instanceType, "xlarge") {
-		basePrice = 0.048
-	} else if strings.Contains(instanceType, "2xlarge") {
-		basePrice = 0.192
-	} else if strings.Contains(instanceType, "4xlarge") {
-		basePrice = 0.384
-	} else if strings.Contains(instanceType, "8xlarge") {
-		basePrice = 0.768
-	} else if strings.Contains(instanceType, "g5.xlarge") {
-		basePrice = 1.006
-	}
-
+	capType := "on-demand"
 	if isSpot {
-		return basePrice * 0.40
+		capType = "spot"
 	}
-	return basePrice
+	hourly, _, _, _ := pricing.GetMatrixPrice(instanceType, capType, "us-east-1")
+	return hourly
 }
 
 func RoundTwoDecimals(val float64) float64 {

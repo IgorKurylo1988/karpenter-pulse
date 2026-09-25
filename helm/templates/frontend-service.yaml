@@ -1,0 +1,17 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "karpenter-pulse.frontendFullname" . }}
+  labels:
+    {{- include "karpenter-pulse.frontendLabels" . | nindent 4 }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "karpenter-pulse.frontendSelectorLabels" . | nindent 4 }}
+{{- end }}

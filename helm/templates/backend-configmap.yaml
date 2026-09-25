@@ -1,0 +1,18 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "karpenter-pulse.backendFullname" . }}-config
+  labels:
+    {{- include "karpenter-pulse.backendLabels" . | nindent 4 }}
+data:
+  AWS_REGION: {{ .Values.backend.config.awsRegion | quote }}
+  SQS_QUEUE_URL: {{ .Values.backend.config.sqsQueueUrl | quote }}
+  CLUSTER_NAME: {{ .Values.backend.config.clusterName | quote }}
+  LOG_LEVELS: {{ .Values.backend.config.logLevels | quote }}
+  KARPENTER_NAMESPACE: {{ .Values.backend.config.karpenterNamespace | quote }}
+  KARPENTER_LABEL_SELECTOR: {{ .Values.backend.config.karpenterLabelSelector | quote }}
+  KARPENTER_LEADER_LEASE_NAME: {{ .Values.backend.config.karpenterLeaderLeaseName | default "karpenter-leader-election" | quote }}
+  KARPENTER_METRICS_URL: {{ .Values.backend.config.karpenterMetricsUrl | default "" | quote }}
+  REDIS_ADDR: {{ .Values.backend.config.redisAddr | default "" | quote }}
+{{- end }}

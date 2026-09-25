@@ -8,6 +8,8 @@ on:
       - 'helm/**'
     tags:
       - 'karpenter-pulse-v*'
+      - 'karpenter-pulse-*'
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag_name:
@@ -25,18 +27,18 @@ on:
 
 permissions:
   id-token: write # Required for Google Workload Identity Federation
-  contents: write # Required to commit and push changes back to the repository
+  contents: write # Required to commit and push changes back to repository and gh-pages branch
 
 jobs:
   helm-publish:
-    name: Lint, Package & Publish Helm Charts
+    name: Lint, Package & Publish Helm Chart
     runs-on: ubuntu-latest
     steps:
       - name: Resolve Version Tag
         id: resolve-tag
         run: |
           TAG="${{ inputs.tag_name }}"
-          if [ -z "$TAG" ] && [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+          if [ -z "$TAG" ] && [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
             TAG="${{ github.ref_name }}"
           fi
           echo "tag_name=$TAG" >> $GITHUB_OUTPUT
@@ -46,6 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: master # Check out master branch to allow committing updates directly to it
+          fetch-depth: 0
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -53,53 +56,65 @@ jobs:
           version: v3.14.0
 
       - name: Login to Google Artifact Registry
+        if: secrets.GCP_SA_KEY != ''
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' | helm registry login europe-north1-docker.pkg.dev --username _json_key --password-stdin
 
-      - name: Bump Chart Versions (SemVer)
+      - name: Set Chart Version from Tag
         if: steps.resolve-tag.outputs.tag_name != ''
         run: |
-          echo "Bumping chart versions using tag: ${{ steps.resolve-tag.outputs.tag_name }}"
-          python .github/scripts/bump-version.py helm/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
-          python .github/scripts/bump-version.py helm/charts/backend/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
-          python .github/scripts/bump-version.py helm/charts/frontend/Chart.yaml ${{ steps.resolve-tag.outputs.tag_name }}
+          echo "Synchronizing chart version with tag: ${{ steps.resolve-tag.outputs.tag_name }}"
+          python .github/scripts/bump-version.py helm/Chart.yaml "${{ steps.resolve-tag.outputs.tag_name }}"
 
       - name: Commit and Push Version Changes
         if: steps.resolve-tag.outputs.tag_name != ''
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add helm/Chart.yaml helm/charts/backend/Chart.yaml helm/charts/frontend/Chart.yaml
+          git add helm/Chart.yaml
           
           # Using [skip ci] in the commit message ensures we do not trigger a recursive workflow run
-          git commit -m "chore(release): bump chart version & appVersion to ${{ steps.resolve-tag.outputs.tag_name }} [skip ci]" || echo "No changes to commit"
+          git commit -m "chore(release): sync chart version & appVersion with ${{ steps.resolve-tag.outputs.tag_name }} [skip ci]" || echo "No changes to commit"
           git push origin HEAD:master
 
-      - name: Update Chart Dependencies
+      - name: Lint Helm Chart
         run: |
-          # Package subcharts locally inside main chart folder
-          helm dependency update helm
+          helm lint helm
 
-      - name: Lint Helm Charts
+      - name: Package Helm Chart
         run: |
-          helm lint helm/charts/backend
-          helm lint helm/charts/frontend
-
-      - name: Package & Push Subcharts
-        run: |
-          # Package backend subchart
-          helm package helm/charts/backend --destination /tmp
-          # Push backend subchart to Google Artifact Registry OCI
-          helm push /tmp/backend-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
-          
-          # Package frontend subchart
-          helm package helm/charts/frontend --destination /tmp
-          # Push frontend subchart to Google Artifact Registry OCI
-          helm push /tmp/frontend-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
-
-      - name: Package & Push Umbrella Chart
-        run: |
-          # Package main umbrella chart
+          # Package unified chart
           helm package helm --destination /tmp
-          # Push main umbrella chart to Google Artifact Registry OCI
-          helm push /tmp/karpenter-pulse-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}
+
+      - name: Push to Google Artifact Registry OCI
+        if: secrets.GCP_SA_KEY != ''
+        run: |
+          helm push /tmp/karpenter-pulse-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }} || true
+
+      - name: Prepare GitHub Pages Helm Repository
+        run: |
+          mkdir -p .gh-pages-repo
+          
+          # Fetch existing index.yaml from GitHub Pages to merge historical versions
+          curl -sSfL https://igorkurylo1988.github.io/karpenter-pulse/index.yaml -o .gh-pages-repo/index.yaml 2>/dev/null || echo "No previous index.yaml found"
+          
+          # Copy newly packaged chart
+          cp /tmp/karpenter-pulse-*.tgz .gh-pages-repo/
+          
+          # Update Helm repository index
+          if [ -f .gh-pages-repo/index.yaml ] && [ -s .gh-pages-repo/index.yaml ]; then
+            helm repo index .gh-pages-repo --url https://igorkurylo1988.github.io/karpenter-pulse/ --merge .gh-pages-repo/index.yaml
+          else
+            helm repo index .gh-pages-repo --url https://igorkurylo1988.github.io/karpenter-pulse/
+          fi
+          
+          # Copy landing page index.html
+          cp helm/index.html .gh-pages-repo/index.html 2>/dev/null || true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: .gh-pages-repo
+          keep_files: true

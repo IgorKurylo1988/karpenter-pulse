@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"karpenter-pulse-backend/internal/models"
 	"karpenter-pulse-backend/internal/state"
 )
 
@@ -95,6 +96,14 @@ func PublishLog(message string, level string) {
 			Level:     level,
 			Message:   message,
 		},
+	})
+}
+
+// PublishStructuredLog broadcasts a typed LogEntry to connected UI clients
+func PublishStructuredLog(entry models.LogEntry) {
+	BroadcastWS(WSMessage{
+		Type:    "structured_log",
+		Payload: entry,
 	})
 }
 

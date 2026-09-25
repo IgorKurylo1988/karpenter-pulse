@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"karpenter-pulse-backend/internal/models"
+	"karpenter-pulse-backend/internal/pricing"
 	"karpenter-pulse-backend/internal/state"
 	"karpenter-pulse-backend/internal/utils"
 )
@@ -140,8 +141,8 @@ func FetchNodes(s *state.ClusterState) ([]models.K8sNode, error) {
 		if capType == "" {
 			capType = "on-demand"
 		}
-		isSpot := capType == "spot"
-		cost := utils.GetEstimatedCost(instType, isSpot)
+		zone := labels["topology.kubernetes.io/zone"]
+		cost, _, _, _ := pricing.GetMatrixPrice(instType, capType, zone)
 
 		nodes = append(nodes, models.K8sNode{
 			Name:         nodeName,
@@ -150,7 +151,7 @@ func FetchNodes(s *state.ClusterState) ([]models.K8sNode, error) {
 			NodeClaim:    labels["karpenter.sh/nodeclaim"],
 			CapacityType: capType,
 			InstanceType: instType,
-			Zone:         labels["topology.kubernetes.io/zone"],
+			Zone:         zone,
 			CpuAllocated: utils.RoundTwoDecimals(cpuAllocated),
 			CpuCapacity:  cpuCapacityFloat,
 			MemAllocated: utils.RoundTwoDecimals(memAllocated),

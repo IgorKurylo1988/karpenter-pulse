@@ -1,23 +1,23 @@
-{{- if .Values.serviceAccount.create -}}
+{{- if and .Values.backend.enabled .Values.backend.serviceAccount.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "backend.serviceAccountName" . }}
+  name: {{ include "karpenter-pulse.serviceAccountName" . }}
   labels:
-    {{- include "backend.labels" . | nindent 4 }}
-  {{- with .Values.serviceAccount.annotations }}
+    {{- include "karpenter-pulse.backendLabels" . | nindent 4 }}
+  {{- with .Values.backend.serviceAccount.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
-{{- if .Values.rbac.create }}
+{{- if and .Values.backend.enabled .Values.backend.rbac.create }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "backend.fullname" . }}-reader
+  name: {{ include "karpenter-pulse.backendFullname" . }}-reader
   labels:
-    {{- include "backend.labels" . | nindent 4 }}
+    {{- include "karpenter-pulse.backendLabels" . | nindent 4 }}
 rules:
   # 1. Karpenter Core Resources (karpenter.sh) - reader with delete on claims for consolidation
   - apiGroups: ["karpenter.sh"]
@@ -32,25 +32,31 @@ rules:
     verbs: ["get", "list", "watch"]
   # 3. Core Standard Kubernetes Resources - reader with delete on nodes for consolidation fallback
   - apiGroups: [""]
-    resources: ["pods", "namespaces"]
+    resources: ["pods", "namespaces", "events"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch", "delete"]
-    
+  # 4. Kubernetes Coordination Lease for Karpenter Leader Election
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "backend.fullname" . }}-reader-binding
+  name: {{ include "karpenter-pulse.backendFullname" . }}-reader-binding
   labels:
-    {{- include "backend.labels" . | nindent 4 }}
+    {{- include "karpenter-pulse.backendLabels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "backend.fullname" . }}-reader
+  name: {{ include "karpenter-pulse.backendFullname" . }}-reader
 subjects:
   - kind: ServiceAccount
-    name: {{ include "backend.serviceAccountName" . }}
+    name: {{ include "karpenter-pulse.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

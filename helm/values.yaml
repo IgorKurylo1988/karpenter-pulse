@@ -1,21 +1,73 @@
-# Umbrella values.yaml for karpenter-pulse.
-# This file passes configurations directly to subcharts (frontend, backend).
+# Default values for karpenter-pulse.
+# Unified Helm chart deploying both Frontend UI and Backend Go API services.
 
-# Global configurations accessible by all subcharts
-global:
-  environment: production
+nameOverride: ""
+fullnameOverride: ""
 
-# Configurations for the Frontend subchart
+# Backend service configurations (Go API + Karpenter Informers)
+backend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: europe-north1-docker.pkg.dev/GCP_PROJECT_ID/karpenter-pulse/server
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  service:
+    type: ClusterIP
+    port: 4000
+
+  # RBAC permissions required by the Go API to inspect Karpenter & Kubernetes resources
+  rbac:
+    create: true
+
+  # Service account used by the backend Pod
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  # Cloud and Karpenter controller runtime configurations
+  config:
+    awsRegion: "us-east-1"
+    sqsQueueUrl: ""
+    clusterName: "my-cluster"
+    logLevels: "INFO,SUCCESS,WARNING,ERROR"
+    karpenterNamespace: "karpenter"
+    karpenterLabelSelector: "app.kubernetes.io/name=karpenter"
+    karpenterLeaderLeaseName: "karpenter-leader-election"
+    karpenterMetricsUrl: ""
+    redisAddr: ""
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Frontend service configurations (React Dashboard + Nginx)
 frontend:
   enabled: true
   replicaCount: 1
+
   image:
-    repository: us-docker.pkg.dev/GCP_PROJECT_ID/GCP_REPOSITORY/karpenter-pulse-frontend
-    tag: ""
+    repository: europe-north1-docker.pkg.dev/GCP_PROJECT_ID/karpenter-pulse/ui
     pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
   service:
     type: ClusterIP
     port: 80
+
   ingress:
     enabled: false
     className: ""
@@ -25,26 +77,16 @@ frontend:
         paths:
           - path: /
             pathType: ImplementationSpecific
+    tls: []
 
-# Configurations for the Backend subchart
-backend:
-  enabled: true
-  replicaCount: 1
-  image:
-    repository: us-docker.pkg.dev/GCP_PROJECT_ID/GCP_REPOSITORY/karpenter-pulse-backend
-    tag: ""
-    pullPolicy: IfNotPresent
-  service:
-    type: ClusterIP
-    port: 4000
-  rbac:
-    create: true
-  serviceAccount:
-    create: true
-  config:
-    awsRegion: "us-east-1"
-    sqsQueueUrl: ""
-    clusterName: "my-cluster"
-    logLevels: "INFO,SUCCESS,WARNING,ERROR"
-    karpenterNamespace: "karpenter"
-    karpenterLabelSelector: "app.kubernetes.io/name=karpenter"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

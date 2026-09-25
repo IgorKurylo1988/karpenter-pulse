@@ -7,6 +7,7 @@ import (
 	
 	"karpenter-pulse-backend/internal/mock"
 	"karpenter-pulse-backend/internal/models"
+	"karpenter-pulse-backend/internal/storage"
 )
 
 type ClusterState struct {
@@ -17,6 +18,13 @@ type ClusterState struct {
 	AlertsMu     sync.RWMutex
 	ActiveAlerts map[string]models.SpotAlert
 
+	// Storage Driver (Redis with in-memory fallback)
+	Storage storage.StorageDriver
+
+	// Leader Pod Information
+	LeaderPod       string
+	LeaderNamespace string
+
 	// Mutable sandbox simulation lists
 	MockMu        sync.RWMutex
 	MockNodes     []models.K8sNode
@@ -25,8 +33,9 @@ type ClusterState struct {
 	MockClaims    []models.NodeClaim
 	MockPods      []models.UnscheduledPod
 
-	// Callback to push logs to WebSocket clients
-	OnLogReceived func(message string, level string)
+	// Callbacks to push logs to WebSocket clients
+	OnLogReceived           func(message string, level string)
+	OnStructuredLogReceived func(entry models.LogEntry)
 }
 
 func NewClusterState() *ClusterState {

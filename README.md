@@ -2,7 +2,7 @@
 
 Karpenter Pulse is a real-time visualization dashboard and monitor for Kubernetes clusters utilizing **Karpenter** for node autoscaling. It provides a visual overview of NodePools, EC2NodeClasses, NodeClaims, standard cluster nodes, and pending/unschedulable pods.
 
-The project is structured as a decoupled microservices architecture with a parent **Helm Umbrella Chart** orchestrating deployment.
+The project is structured as a decoupled microservices architecture (React UI frontend + Go API backend) packaged and deployed via a single, unified **Helm Chart**.
 
 ---
 
@@ -17,12 +17,19 @@ karpenter-pulse/
 ├── backend/              # Go REST API Backend
 │   ├── main.go           # REST endpoints and Kubernetes client query logic
 │   └── Dockerfile        # Decoupled Go binary build
-├── helm/                 # Parent Helm Umbrella Chart
-│   ├── Chart.yaml        # Umbrella configuration
-│   ├── values.yaml       # Override configurations for frontend & backend subcharts
-│   └── charts/           # Decoupled subcharts
-│       ├── frontend/     # Nginx UI subchart (Deployment, Service, Ingress)
-│       └── backend/      # Go API subchart (Deployment, Service, RBAC)
+├── helm/                 # Unified Helm Chart (Frontend UI, Go Backend, RBAC)
+│   ├── Chart.yaml        # Chart metadata
+│   ├── values.yaml       # Default deployment configurations
+│   ├── index.html        # GitHub Pages Helm repository landing page
+│   └── templates/        # Kubernetes resource templates
+│       ├── _helpers.tpl
+│       ├── backend-deployment.yaml
+│       ├── backend-service.yaml
+│       ├── backend-configmap.yaml
+│       ├── backend-rbac.yaml
+│       ├── frontend-deployment.yaml
+│       ├── frontend-service.yaml
+│       └── frontend-ingress.yaml
 └── README.md             # Project documentation
 ```
 
@@ -50,31 +57,132 @@ The frontend is built using standard multi-stage builds:
 
 ---
 
-## Helm Umbrella Chart
+## Helm Chart Installation
 
-The main Helm Chart (`/helm`) operates as an **Umbrella Chart**, referencing and orchestrating two independent subcharts located in the `charts/` folder:
+The unified Helm chart (`/helm`) deploys the complete Karpenter Pulse application suite—including the Go API backend, cluster RBAC readers, and the React UI frontend.
 
-1. **`frontend` Subchart** (`helm/charts/frontend`): Deploys the Nginx container, creates a Service, and optionally binds an Ingress controller.
-2. **`backend` Subchart** (`helm/charts/backend`): Deploys the Go binary container, configures readiness/liveness probes, and creates standard Kubernetes Cluster-wide RBAC permissions.
+### Option 1: Official GitHub Pages Helm Repository (Recommended)
 
-### Customizing Subcharts via Umbrella values.yaml
-You can override any subchart value from the root `helm/values.yaml` file:
-```yaml
-frontend:
-  replicaCount: 2
-  image:
-    repository: myregistry/karpenter-pulse-ui
-    tag: v1.0.0
-backend:
-  replicaCount: 2
-  image:
-    repository: myregistry/karpenter-pulse-backend
-    tag: v1.0.0
-```
+Add the Karpenter Pulse Helm chart repository:
 
-### Installation
-Deploy the entire stack with a single command:
 ```bash
-helm upgrade --install karpenter-pulse ./helm -n karpenter --create-namespace
+helm repo add karpenter-pulse https://igorkurylo1988.github.io/karpenter-pulse/
+helm repo update
 ```
-This automatically deploys both subcharts, bindings, and permissions inside the `karpenter` namespace.
+
+Install the chart:
+
+```bash
+helm install karpenter-pulse karpenter-pulse/karpenter-pulse \
+  --namespace karpenter-pulse \
+  --create-namespace
+```
+
+### Option 2: OCI Registry (Google Artifact Registry)
+
+```bash
+helm install karpenter-pulse oci://europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/karpenter-pulse \
+  --version 1.0.0 \
+  --namespace karpenter-pulse \
+  --create-namespace
+```
+
+### Option 3: Local Development Installation
+
+```bash
+helm upgrade --install karpenter-pulse ./helm \
+  --namespace karpenter-pulse \
+  --create-namespace
+```
+
+---
+
+## Configuration (`values.yaml`)
+
+You can customize the deployment by passing a custom `values.yaml` file:
+
+```bash
+helm upgrade --install karpenter-pulse karpenter-pulse/karpenter-pulse \
+  --namespace karpenter-pulse \
+  --create-namespace \
+  -f my-values.yaml
+```
+
+### Example `values.yaml`
+
+```yaml
+# Backend Configuration
+backend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/server
+    pullPolicy: IfNotPresent
+    tag: "1.0.0" # Defaults to Chart appVersion if omitted
+
+  service:
+    type: ClusterIP
+    port: 4000
+
+  # Cluster RBAC permissions to read nodes, pods, nodepools, nodeclaims
+  rbac:
+    create: true
+
+  serviceAccount:
+    create: true
+    name: ""
+
+  config:
+    awsRegion: "us-east-1"
+    sqsQueueUrl: ""
+    clusterName: "my-cluster"
+    logLevels: "INFO,SUCCESS,WARNING,ERROR"
+    karpenterNamespace: "karpenter"
+    karpenterLabelSelector: "app.kubernetes.io/name=karpenter"
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Frontend Configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/ui
+    pullPolicy: IfNotPresent
+    tag: "1.0.0" # Defaults to Chart appVersion if omitted
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: false
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    hosts:
+      - host: karpenter-pulse.example.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: karpenter-pulse-tls
+        hosts:
+          - karpenter-pulse.example.com
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+```
