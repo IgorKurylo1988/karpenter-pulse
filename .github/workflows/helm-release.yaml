@@ -56,7 +56,6 @@ jobs:
           version: v3.14.0
 
       - name: Login to Google Artifact Registry
-        if: secrets.GCP_SA_KEY != ''
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' | helm registry login europe-north1-docker.pkg.dev --username _json_key --password-stdin
 
@@ -87,7 +86,6 @@ jobs:
           helm package helm --destination /tmp
 
       - name: Push to Google Artifact Registry OCI
-        if: secrets.GCP_SA_KEY != ''
         run: |
           helm push /tmp/karpenter-pulse-*.tgz oci://europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }} || true
 
