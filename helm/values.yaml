@@ -26,6 +26,13 @@ backend:
   # Service account used by the backend Pod
   serviceAccount:
     create: true
+    # Cloud Provider IAM Role Annotations for passwordless authentication:
+    # - AWS EKS (IRSA):
+    #     eks.amazonaws.com/role-arn: "arn:aws:iam::<ACCOUNT_ID>:role/karpenter-pulse-backend"
+    # - Azure AKS (Workload Identity):
+    #     azure.workload.identity/client-id: "<MANAGED_IDENTITY_CLIENT_ID>"
+    # - Google Cloud GKE (Workload Identity):
+    #     iam.gke.io/gcp-service-account: "karpenter-pulse@<GCP_PROJECT_ID>.iam.gserviceaccount.com"
     annotations: {}
     name: ""
 
@@ -40,6 +47,10 @@ backend:
   # Cloud and Karpenter controller runtime configurations
   config:
     awsRegion: "us-east-1"
+    # SQS Queue URL for real-time AWS Spot Interruption & Rebalance notices.
+    # When populated, the backend long-polls this queue, and the UI displays
+    # live 2-minute countdown warnings with red pulsing alerts on affected nodes.
+    # Leave empty ("") to disable SQS polling or operate in standalone simulation mode.
     sqsQueueUrl: ""
     clusterName: "my-cluster"
     logLevels: "INFO,SUCCESS,WARNING,ERROR"
