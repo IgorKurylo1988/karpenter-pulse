@@ -23,13 +23,15 @@ karpenter-pulse/
 │   ├── index.html        # GitHub Pages Helm repository landing page
 │   └── templates/        # Kubernetes resource templates
 │       ├── _helpers.tpl
-│       ├── backend-deployment.yaml
-│       ├── backend-service.yaml
-│       ├── backend-configmap.yaml
-│       ├── backend-rbac.yaml
-│       ├── frontend-deployment.yaml
-│       ├── frontend-service.yaml
-│       └── frontend-ingress.yaml
+│       ├── kp-brain/         # Go API Backend resources
+│       │   ├── configmap.yaml
+│       │   ├── deployment.yaml
+│       │   ├── rbac.yaml
+│       │   └── service.yaml
+│       └── kp-web/           # React UI Frontend resources
+│           ├── deployment.yaml
+│           ├── ingress.yaml
+│           └── service.yaml
 └── README.md             # Project documentation
 ```
 

@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "backend.fullname" . }}
+  name: {{ include "karpenter-pulse.backendFullname" . }}
   labels:
-    {{- include "backend.labels" . | nindent 4 }}
+    {{- include "karpenter-pulse.backendLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-      {{- include "backend.selectorLabels" . | nindent 6 }}
+      {{- include "karpenter-pulse.backendSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "backend.selectorLabels" . | nindent 8 }}
+        {{- include "karpenter-pulse.backendSelectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "backend.serviceAccountName" . }}
+      serviceAccountName: {{ include "karpenter-pulse.serviceAccountName" . }}
       containers:
-        - name: backend
+        - name: karpenter-pulse-brain
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
@@ -29,7 +29,7 @@ spec:
               value: {{ .Values.backend.service.port | quote }}
           envFrom:
             - configMapRef:
-                name: {{ include "backend.fullname" . }}-config
+                name: {{ include "karpenter-pulse.backendFullname" . }}-config
           livenessProbe:
             httpGet:
               path: /api/health

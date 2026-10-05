@@ -16,7 +16,7 @@ spec:
         {{- include "karpenter-pulse.frontendSelectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: frontend
+        - name: karpenter-pulse-web
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
