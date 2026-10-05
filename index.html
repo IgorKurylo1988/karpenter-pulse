@@ -964,6 +964,16 @@
               <td><span class="code-default">"us-east-1"</span></td>
             </tr>
             <tr>
+              <td><span class="code-param">backend.config.sqsQueueUrl</span></td>
+              <td>Amazon SQS Queue URL for real-time Spot Interruption (2-min warning) and Rebalance notices</td>
+              <td><span class="code-default">""</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">backend.serviceAccount.annotations</span></td>
+              <td>IAM role annotations for passwordless auth (AWS EKS IRSA, Azure AKS, or GCP GKE Workload Identity)</td>
+              <td><span class="code-default">{}</span></td>
+            </tr>
+            <tr>
               <td><span class="code-param">backend.config.clusterName</span></td>
               <td>Target EKS / Kubernetes cluster identifier</td>
               <td><span class="code-default">"my-cluster"</span></td>
