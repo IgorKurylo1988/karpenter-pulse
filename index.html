@@ -3,126 +3,472 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Karpenter Pulse — Helm Charts Repository</title>
-  <link rel="icon" href="https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/ui/public/favicon.ico" type="image/x-icon">
+  <title>Karpenter Pulse — Kubernetes Observability & Autoscaling Dashboard</title>
+  <meta name="description" content="Official Helm Charts Repository for Karpenter Pulse — Real-time Autoscaling, NodePools, NodeClaims, and FinOps Monitor for Kubernetes.">
+  <link rel="icon" href="https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/ui/public/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #111827;
-      --border: #1f2937;
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --accent: #10b981;
+      --bg: #07090e;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.8);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(50, 108, 229, 0.3);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --k8s-blue: #326ce5;
+      --k8s-blue-glow: rgba(50, 108, 229, 0.25);
+      --karpenter-purple: #8b5cf6;
+      --karpenter-purple-glow: rgba(139, 92, 246, 0.25);
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
       --code-bg: #030712;
+      --code-border: #1e293b;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font-sans);
       background-color: var(--bg);
       color: var(--text);
       line-height: 1.6;
-      padding: 2rem 1rem;
       min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(50, 108, 229, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 10% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Top Navigation */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(7, 9, 14, 0.75);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
       display: flex;
-      flex-direction: column;
       align-items: center;
+      justify-content: space-between;
     }
-    .container {
-      max-width: 860px;
-      width: 100%;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
     }
-    header {
-      text-align: center;
-      margin-bottom: 2.5rem;
+    .brand svg {
+      width: 28px;
+      height: 28px;
     }
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 9999px;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: var(--text);
+    }
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.9rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
       font-size: 0.85rem;
       font-weight: 600;
-      margin-bottom: 1rem;
+      text-decoration: none;
+      transition: all 0.2s;
     }
+    .btn-github:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .badges-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .badge-k8s {
+      background: rgba(50, 108, 229, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(50, 108, 229, 0.35);
+    }
+    .badge-helm {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+    .badge-version {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
     h1 {
-      font-size: 2.5rem;
+      font-size: 3.25rem;
       font-weight: 800;
-      letter-spacing: -0.025em;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 0.75rem;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     p.lead {
       color: var(--text-muted);
-      font-size: 1.15rem;
+      font-size: 1.25rem;
+      max-width: 680px;
+      margin: 0 auto;
+      font-weight: 400;
     }
+
+    /* Glass Cards */
     .card {
-      background-color: var(--card-bg);
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.75rem;
-      margin-bottom: 1.75rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    h2 {
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .card-title {
       font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.015em;
+    }
+    .card-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Tabs Component */
+    .tab-header {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tab-header::-webkit-scrollbar {
+      display: none;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+      white-space: nowrap;
+      border-radius: 6px 6px 0 0;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+    }
+    .tab-btn.active {
+      color: #60a5fa;
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #3b82f6;
+      box-shadow: 0 0 10px #3b82f6;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Code Block with Copy */
+    .code-wrapper {
+      position: relative;
       margin-bottom: 1rem;
-      color: #e5e7eb;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      padding-right: 4.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .code-block .cmd {
+      color: #38bdf8;
+    }
+    .code-block .arg {
+      color: #f1f5f9;
+    }
+    .code-block .flag {
+      color: #cbd5e1;
+    }
+    .code-block .val {
+      color: #a78bfa;
+    }
+    .code-block .comment {
+      color: #64748b;
+      font-style: italic;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: var(--text);
+    }
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    /* Architecture Grid */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .arch-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+    }
+    .arch-card:hover {
+      background: rgba(30, 41, 59, 0.5);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+    .arch-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .icon-brain {
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    .icon-web {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .arch-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .arch-tag {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+    .arch-card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin-bottom: 1rem;
+    }
+    .feature-list {
+      list-style: none;
+    }
+    .feature-list li {
+      font-size: 0.85rem;
+      color: #cbd5e1;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      margin-bottom: 0.4rem;
     }
-    .code-block {
-      background-color: var(--code-bg);
-      border: 1px solid #1e293b;
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.92rem;
-      color: #38bdf8;
+    .feature-list li::before {
+      content: '✓';
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }
+
+    /* Configuration Table */
+    .table-container {
       overflow-x: auto;
-      margin-bottom: 1rem;
-      position: relative;
+      border-radius: 10px;
+      border: 1px solid var(--border);
     }
-    .code-block span.comment {
-      color: #64748b;
-    }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .chart-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 1.25rem;
-    }
-    .chart-card h3 {
-      font-size: 1.1rem;
-      color: #38bdf8;
-      margin-bottom: 0.5rem;
-    }
-    .chart-card p {
-      color: var(--text-muted);
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
       font-size: 0.9rem;
     }
-    footer {
-      margin-top: auto;
-      text-align: center;
+    th {
+      background: rgba(15, 23, 42, 0.8);
       color: var(--text-muted);
-      font-size: 0.875rem;
-      padding-top: 2rem;
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .code-param {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #38bdf8;
+    }
+    .code-default {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      background: rgba(7, 9, 14, 0.9);
     }
     footer a {
       color: #60a5fa;
@@ -131,59 +477,304 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2.25rem; }
+      p.lead { font-size: 1.1rem; }
+      .container { padding-top: 2rem; }
+      .card { padding: 1.25rem; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Top Kubernetes Navigation -->
+  <nav>
+    <div class="nav-content">
+      <a href="https://github.com/IgorKurylo1988/karpenter-pulse" class="brand">
+        <!-- Kubernetes / Karpenter Pulse Logo -->
+        <svg viewBox="0 0 48 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" fill="url(#brand-grad)"/>
+          <defs>
+            <linearGradient id="brand-grad" x1="0" y1="0" x2="48" y2="46" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#3b82f6"/>
+              <stop offset="0.5" stop-color="#8b5cf6"/>
+              <stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Karpenter Pulse</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#quickstart">Quick Start</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#configuration">Values</a>
+        <a href="https://github.com/IgorKurylo1988/karpenter-pulse" target="_blank" rel="noopener" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
-    <header>
-      <div class="badge">Official Helm Repository</div>
-      <h1>Karpenter Pulse</h1>
-      <p class="lead">Observability & Autoscaling Dashboard for Kubernetes Karpenter</p>
-    </header>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="badges-row">
+        <span class="badge badge-k8s">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.968.043a1.996 1.996 0 00-.77.156L3.084 3.73a2 2 0 00-1.156 1.83v7.05a2 2 0 00.373 1.156l5.05 7.15a2 2 0 001.44.834h6.417a2 2 0 001.44-.834l5.05-7.15a2 2 0 00.373-1.156V5.56a2 2 0 00-1.156-1.83L12.805.199a1.996 1.996 0 00-.837-.156z"/>
+          </svg>
+          Kubernetes 1.26+
+        </span>
+        <span class="badge badge-helm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 14.93V19a1 1 0 01-2 0v-2.07A6 6 0 017.07 13H5a1 1 0 010-2h2.07A6 6 0 0111 7.07V5a1 1 0 012 0v2.07A6 6 0 0116.93 11H19a1 1 0 010 2h-2.07A6 6 0 0113 16.93z"/>
+          </svg>
+          Helm v3
+        </span>
+        <span class="badge badge-version">Chart v1.0.0</span>
+      </div>
 
-    <div class="card">
-      <h2>🚀 Quick Start: Add Helm Repository</h2>
-      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Add the Karpenter Pulse Helm chart repository to your Helm client:</p>
-      <div class="code-block">
-        <span class="comment"># Add repository</span><br>
-        helm repo add karpenter-pulse https://igorkurylo1988.github.io/karpenter-pulse/<br><br>
-        <span class="comment"># Fetch latest charts</span><br>
-        helm repo update
+      <h1>Kubernetes Karpenter<br><span class="gradient-text">Pulse & Observability</span></h1>
+      <p class="lead">Unified real-time telemetry, NodePool & NodeClaim visualization, Spot lifecycle tracking, and FinOps metrics for Karpenter autoscalers.</p>
+    </section>
+
+    <!-- Quick Start Installation Tabs -->
+    <div class="card" id="quickstart">
+      <div class="card-title">
+        <span>⚡ Quick Start: Deploy to Cluster</span>
+      </div>
+      <p class="card-subtitle">Choose your preferred Kubernetes deployment pattern below:</p>
+
+      <div class="tab-header">
+        <button class="tab-btn active" onclick="switchTab('helm-repo')">Helm Repository</button>
+        <button class="tab-btn" onclick="switchTab('oci-registry')">OCI Registry</button>
+        <button class="tab-btn" onclick="switchTab('gitops-argocd')">ArgoCD / GitOps</button>
+        <button class="tab-btn" onclick="switchTab('port-forward')">Access Dashboard</button>
+      </div>
+
+      <!-- Tab 1: Standard Helm Repo -->
+      <div id="tab-helm-repo" class="tab-panel active">
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copySnippet(this, 'snippet-helm-repo')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <pre class="code-block" id="snippet-helm-repo"><span class="comment"># 1. Add Karpenter Pulse repository</span>
+<span class="cmd">helm repo add</span> <span class="arg">karpenter-pulse</span> <span class="val">https://igorkurylo1988.github.io/karpenter-pulse/</span>
+<span class="cmd">helm repo update</span>
+
+<span class="comment"># 2. Install unified chart into 'karpenter-pulse' namespace</span>
+<span class="cmd">helm upgrade --install</span> <span class="arg">karpenter-pulse</span> <span class="val">karpenter-pulse/karpenter-pulse</span> \
+  <span class="flag">--namespace</span> <span class="val">karpenter-pulse</span> \
+  <span class="flag">--create-namespace</span></pre>
+        </div>
+      </div>
+
+      <!-- Tab 2: OCI Registry -->
+      <div id="tab-oci-registry" class="tab-panel">
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copySnippet(this, 'snippet-oci')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <pre class="code-block" id="snippet-oci"><span class="comment"># Direct OCI installation from Google Artifact Registry</span>
+<span class="cmd">helm upgrade --install</span> <span class="arg">karpenter-pulse</span> \
+  <span class="val">oci://europe-north1-docker.pkg.dev/&lt;PROJECT_ID&gt;/karpenter-pulse/karpenter-pulse</span> \
+  <span class="flag">--version</span> <span class="val">1.0.0</span> \
+  <span class="flag">--namespace</span> <span class="val">karpenter-pulse</span> \
+  <span class="flag">--create-namespace</span></pre>
+        </div>
+      </div>
+
+      <!-- Tab 3: GitOps / ArgoCD -->
+      <div id="tab-gitops-argocd" class="tab-panel">
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copySnippet(this, 'snippet-gitops')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <pre class="code-block" id="snippet-gitops"><span class="comment"># ArgoCD Application Manifest</span>
+<span class="cmd">apiVersion:</span> <span class="arg">argoproj.io/v1alpha1</span>
+<span class="cmd">kind:</span> <span class="arg">Application</span>
+<span class="cmd">metadata:</span>
+  <span class="cmd">name:</span> <span class="val">karpenter-pulse</span>
+  <span class="cmd">namespace:</span> <span class="val">argocd</span>
+<span class="cmd">spec:</span>
+  <span class="cmd">project:</span> <span class="val">default</span>
+  <span class="cmd">source:</span>
+    <span class="cmd">repoURL:</span> <span class="val">https://igorkurylo1988.github.io/karpenter-pulse/</span>
+    <span class="cmd">chart:</span> <span class="val">karpenter-pulse</span>
+    <span class="cmd">targetRevision:</span> <span class="val">1.0.0</span>
+  <span class="cmd">destination:</span>
+    <span class="cmd">server:</span> <span class="val">https://kubernetes.default.svc</span>
+    <span class="cmd">namespace:</span> <span class="val">karpenter-pulse</span>
+  <span class="cmd">syncPolicy:</span>
+    <span class="cmd">automated:</span>
+      <span class="cmd">prune:</span> <span class="val">true</span>
+      <span class="cmd">selfHeal:</span> <span class="val">true</span></pre>
+        </div>
+      </div>
+
+      <!-- Tab 4: Access Dashboard -->
+      <div id="tab-port-forward" class="tab-panel">
+        <div class="code-wrapper">
+          <button class="copy-btn" onclick="copySnippet(this, 'snippet-portforward')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+          <pre class="code-block" id="snippet-portforward"><span class="comment"># Forward the Web UI service port to localhost</span>
+<span class="cmd">kubectl port-forward</span> <span class="arg">svc/karpenter-pulse-web</span> <span class="val">8080:80</span> <span class="flag">-n</span> <span class="val">karpenter-pulse</span>
+
+<span class="comment"># Open your browser at http://localhost:8080</span></pre>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>📦 Install Karpenter Pulse</h2>
-      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Deploy the complete Karpenter Pulse dashboard (UI + Backend + RBAC) into your cluster:</p>
-      <div class="code-block">
-        <span class="comment"># Install full application suite into 'karpenter-pulse' namespace</span><br>
-        helm install karpenter-pulse karpenter-pulse/karpenter-pulse \<br>
-        &nbsp;&nbsp;--namespace karpenter-pulse \<br>
-        &nbsp;&nbsp;--create-namespace
+    <!-- Microservices Architecture -->
+    <div class="card" id="architecture">
+      <div class="card-title">
+        <span>☸ Decoupled Microservice Architecture</span>
+      </div>
+      <p class="card-subtitle">Karpenter Pulse packages clean separation of concerns into a unified Helm deployment:</p>
+
+      <div class="arch-grid">
+        <!-- Backend Brain Card -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="icon-box icon-brain">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-3 3.86V15a4 4 0 0 0 3 3.86V20a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-1.14A4 4 0 0 0 19 15v-4.14A4 4 0 0 0 16 7V6a4 4 0 0 0-4-4z"></path></svg>
+            </div>
+            <div>
+              <h3>kp-brain</h3>
+              <span class="arch-tag">Go REST API Engine</span>
+            </div>
+          </div>
+          <p>Real-time Kubernetes informers querying Karpenter CRDs (NodePools, NodeClaims, EC2NodeClasses) and AWS pricing intelligence.</p>
+          <ul class="feature-list">
+            <li>Karpenter CRD Client Informers</li>
+            <li>In-memory & Redis caching layers</li>
+            <li>AWS SQS Spot Interruption listener</li>
+            <li>Least-privilege ClusterRole RBAC</li>
+          </ul>
+        </div>
+
+        <!-- Frontend Web Card -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="icon-box icon-web">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <div>
+              <h3>kp-web</h3>
+              <span class="arch-tag">React Dashboard & Nginx</span>
+            </div>
+          </div>
+          <p>Responsive, reactive visualization dashboard built with React 19, TypeScript, Recharts, and automated API reverse-proxying.</p>
+          <ul class="feature-list">
+            <li>Dynamic NodePool capacity visualization</li>
+            <li>Interactive NodeClaim & Pod inspector</li>
+            <li>FinOps & Spot savings breakdown</li>
+            <li>Nginx envsubst zero-CORS proxying</li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>📊 Available Helm Charts</h2>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>karpenter-pulse</h3>
-          <p>Main umbrella chart orchestrating both the frontend UI and backend Go API services.</p>
-        </div>
-        <div class="chart-card">
-          <h3>backend</h3>
-          <p>Subchart deploying the Go API service, Karpenter client informers, and cluster RBAC permissions.</p>
-        </div>
-        <div class="chart-card">
-          <h3>frontend</h3>
-          <p>Subchart deploying the React dashboard powered by Vite, TailwindCSS, and Nginx.</p>
-        </div>
+    <!-- Configuration Table -->
+    <div class="card" id="configuration">
+      <div class="card-title">
+        <span>⚙ Popular Chart Configurations (`values.yaml`)</span>
+      </div>
+      <p class="card-subtitle">Common values to customize for production deployments:</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Description</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-param">backend.config.awsRegion</span></td>
+              <td>AWS Region for EC2 pricing and SQS queues</td>
+              <td><span class="code-default">"us-east-1"</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">backend.config.clusterName</span></td>
+              <td>Target EKS / Kubernetes cluster identifier</td>
+              <td><span class="code-default">"my-cluster"</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">backend.config.karpenterNamespace</span></td>
+              <td>Namespace where Karpenter controllers run</td>
+              <td><span class="code-default">"karpenter"</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">backend.rbac.create</span></td>
+              <td>Automatically bind read permissions for CRDs</td>
+              <td><span class="code-default">true</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">frontend.ingress.enabled</span></td>
+              <td>Expose React UI through an Ingress controller</td>
+              <td><span class="code-default">false</span></td>
+            </tr>
+            <tr>
+              <td><span class="code-param">backend.resources.limits.memory</span></td>
+              <td>Go backend container memory limit</td>
+              <td><span class="code-default">256Mi</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <footer>
-      <p>Source code and documentation available on <a href="https://github.com/IgorKurylo1988/karpenter-pulse" target="_blank" rel="noopener">GitHub</a>.</p>
-    </footer>
   </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container" style="padding: 0;">
+      <p>Karpenter Pulse is an open-source project licensed under the Apache 2.0 / MIT License.</p>
+      <p style="margin-top: 0.5rem;">Maintained by <a href="https://github.com/IgorKurylo1988" target="_blank" rel="noopener">Igor Kurylo</a> • Source on <a href="https://github.com/IgorKurylo1988/karpenter-pulse" target="_blank" rel="noopener">GitHub</a></p>
+    </div>
+  </footer>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      const selectedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (selectedBtn) selectedBtn.classList.add('active');
+
+      const selectedPanel = document.getElementById('tab-' + tabId);
+      if (selectedPanel) selectedPanel.classList.add('active');
+    }
+
+    function copySnippet(button, snippetId) {
+      const codeElement = document.getElementById(snippetId);
+      const textToCopy = codeElement.innerText;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalText = button.innerHTML;
+        button.classList.add('copied');
+        button.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Copied!</span>
+        `;
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>
