@@ -478,11 +478,143 @@
       text-decoration: underline;
     }
 
+    /* Dashboard Showcase Mockup */
+    .dashboard-mockup {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0b0f19;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(50, 108, 229, 0.15);
+      margin-bottom: 1.25rem;
+      transition: all 0.3s ease;
+    }
+    .dashboard-mockup:hover {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(50, 108, 229, 0.25);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .mockup-header {
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .mockup-dots {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .mockup-dots .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .mockup-address-bar {
+      flex: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 0.25rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .mockup-body {
+      position: relative;
+      background: #07090e;
+      line-height: 0;
+      cursor: zoom-in;
+    }
+    .dashboard-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-bottom-left-radius: 11px;
+      border-bottom-right-radius: 11px;
+      transition: filter 0.2s ease;
+    }
+    .dashboard-img:hover {
+      filter: brightness(1.03);
+    }
+    .dashboard-caption {
+      padding: 0.75rem 0.25rem 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .dashboard-caption h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .dashboard-caption p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .dashboard-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      padding: 0.25rem 0.6rem;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: #60a5fa;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      padding: 2rem;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox-modal.active {
+      display: flex;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .lightbox-modal img {
+      max-width: 95%;
+      max-height: 90vh;
+      border-radius: 10px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(50, 108, 229, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
     @media (max-width: 768px) {
       h1 { font-size: 2.25rem; }
       p.lead { font-size: 1.1rem; }
       .container { padding-top: 2rem; }
       .card { padding: 1.25rem; }
+      .mockup-address-bar { display: none; }
     }
   </style>
 </head>
@@ -507,6 +639,7 @@
       </a>
 
       <div class="nav-links">
+        <a href="#dashboards">Dashboards</a>
         <a href="#quickstart">Quick Start</a>
         <a href="#architecture">Architecture</a>
         <a href="#configuration">Values</a>
@@ -542,6 +675,129 @@
       <h1>Kubernetes Karpenter<br><span class="gradient-text">Pulse & Observability</span></h1>
       <p class="lead">Unified real-time telemetry, NodePool & NodeClaim visualization, Spot lifecycle tracking, and FinOps metrics for Karpenter autoscalers.</p>
     </section>
+ 
+    <!-- Dashboard Showcase Section -->
+    <div class="card" id="dashboards">
+      <div class="card-title">
+        <span>📊 Karpenter Pulse in Action</span>
+      </div>
+      <p class="card-subtitle">Explore the interactive visualization engine built for Karpenter autoscaling and Kubernetes operations:</p>
+
+      <div class="tab-header">
+        <button class="tab-btn active" onclick="switchTab('dash-overview')">Cluster Overview</button>
+        <button class="tab-btn" onclick="switchTab('dash-simulation')">Scaling Simulation & Logs</button>
+        <button class="tab-btn" onclick="switchTab('dash-nodepools')">NodePools (CRD)</button>
+        <button class="tab-btn" onclick="switchTab('dash-nodeclasses')">EC2NodeClasses (CRD)</button>
+      </div>
+
+      <!-- Tab 1: Cluster Overview -->
+      <div id="tab-dash-overview" class="tab-panel active">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="mockup-address-bar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>karpenter-pulse.kurigor.com — Cluster Fleet Health</span>
+            </div>
+          </div>
+          <div class="mockup-body" onclick="openLightbox('images/dashboard-overview.png')">
+            <img src="images/dashboard-overview.png" onerror="this.src='https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/docs/images/dashboard-overview.png'" alt="Karpenter Pulse Overview Dashboard" class="dashboard-img" loading="lazy">
+          </div>
+        </div>
+        <div class="dashboard-caption">
+          <div>
+            <h4>Real-time Cluster Fleet & FinOps Analytics</h4>
+            <p>Instant visibility across all Karpenter-provisioned nodes, CPU and memory utilization gauges, unschedulable pod alerts, and active Spot instance cost optimization tracking.</p>
+          </div>
+          <span class="dashboard-tag">Click to expand ⤢</span>
+        </div>
+      </div>
+
+      <!-- Tab 2: Scaling Simulation & Stream -->
+      <div id="tab-dash-simulation" class="tab-panel">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="mockup-address-bar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>karpenter-pulse.kurigor.com — Real-Time Simulation & Event Stream</span>
+            </div>
+          </div>
+          <div class="mockup-body" onclick="openLightbox('images/dashboard-simulation.png')">
+            <img src="images/dashboard-simulation.png" onerror="this.src='https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/docs/images/dashboard-simulation.png'" alt="Scaling Simulation & Logs Stream" class="dashboard-img" loading="lazy">
+          </div>
+        </div>
+        <div class="dashboard-caption">
+          <div>
+            <h4>Interactive Workload Simulation & Live Event Feed</h4>
+            <p>Simulate unscheduled pod pressure, trigger simulated Spot 2-minute interruption warnings, test fleet scale-up decisions, and monitor live WebSocket-streamed Karpenter controller logs.</p>
+          </div>
+          <span class="dashboard-tag">Click to expand ⤢</span>
+        </div>
+      </div>
+
+      <!-- Tab 3: NodePools -->
+      <div id="tab-dash-nodepools" class="tab-panel">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="mockup-address-bar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>karpenter-pulse.kurigor.com — NodePools (karpenter.sh/v1)</span>
+            </div>
+          </div>
+          <div class="mockup-body" onclick="openLightbox('images/dashboard-nodepools.png')">
+            <img src="images/dashboard-nodepools.png" onerror="this.src='https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/docs/images/dashboard-nodepools.png'" alt="NodePools CRD Inspector" class="dashboard-img" loading="lazy">
+          </div>
+        </div>
+        <div class="dashboard-caption">
+          <div>
+            <h4>NodePool Configuration & Policy Inspector</h4>
+            <p>Inspect autoscaling constraints, limits, disruption rules, consolidation timeouts (WhenEmptyOrUnderutilized), supported instance categories, and raw Kubernetes CRD manifests.</p>
+          </div>
+          <span class="dashboard-tag">Click to expand ⤢</span>
+        </div>
+      </div>
+
+      <!-- Tab 4: EC2NodeClasses -->
+      <div id="tab-dash-nodeclasses" class="tab-panel">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="mockup-address-bar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>karpenter-pulse.kurigor.com — EC2NodeClasses (karpenter.k8s.aws/v1)</span>
+            </div>
+          </div>
+          <div class="mockup-body" onclick="openLightbox('images/dashboard-nodeclasses.png')">
+            <img src="images/dashboard-nodeclasses.png" onerror="this.src='https://raw.githubusercontent.com/IgorKurylo1988/karpenter-pulse/master/docs/images/dashboard-nodeclasses.png'" alt="EC2NodeClasses CRD Inspector" class="dashboard-img" loading="lazy">
+          </div>
+        </div>
+        <div class="dashboard-caption">
+          <div>
+            <h4>Cloud Infrastructure & Subnet Tag Discovery</h4>
+            <p>Visualize AWS EC2NodeClasses, AMI families (AL2023, Bottlerocket), storage volumes, IAM role associations, and dynamic subnet/security-group discovery selectors.</p>
+          </div>
+          <span class="dashboard-tag">Click to expand ⤢</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Quick Start Installation Tabs -->
     <div class="card" id="quickstart">
@@ -565,7 +821,7 @@
             <span>Copy</span>
           </button>
           <pre class="code-block" id="snippet-helm-repo"><span class="comment"># 1. Add Karpenter Pulse repository</span>
-<span class="cmd">helm repo add</span> <span class="arg">karpenter-pulse</span> <span class="val">https://igorkurylo1988.github.io/karpenter-pulse/</span>
+<span class="cmd">helm repo add</span> <span class="arg">karpenter-pulse</span> <span class="val">https://karpenter-pulse.kurigor.com/</span>
 <span class="cmd">helm repo update</span>
 
 <span class="comment"># 2. Install unified chart into 'karpenter-pulse' namespace</span>
@@ -584,7 +840,7 @@
           </button>
           <pre class="code-block" id="snippet-oci"><span class="comment"># Direct OCI installation from Google Artifact Registry</span>
 <span class="cmd">helm upgrade --install</span> <span class="arg">karpenter-pulse</span> \
-  <span class="val">oci://europe-north1-docker.pkg.dev/&lt;PROJECT_ID&gt;/karpenter-pulse/karpenter-pulse</span> \
+  <span class="val">oci://europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/karpenter-pulse</span> \
   <span class="flag">--version</span> <span class="val">1.0.0</span> \
   <span class="flag">--namespace</span> <span class="val">karpenter-pulse</span> \
   <span class="flag">--create-namespace</span></pre>
@@ -607,7 +863,7 @@
 <span class="cmd">spec:</span>
   <span class="cmd">project:</span> <span class="val">default</span>
   <span class="cmd">source:</span>
-    <span class="cmd">repoURL:</span> <span class="val">https://igorkurylo1988.github.io/karpenter-pulse/</span>
+    <span class="cmd">repoURL:</span> <span class="val">https://karpenter-pulse.kurigor.com/</span>
     <span class="cmd">chart:</span> <span class="val">karpenter-pulse</span>
     <span class="cmd">targetRevision:</span> <span class="val">1.0.0</span>
   <span class="cmd">destination:</span>
@@ -746,17 +1002,40 @@
     </div>
   </footer>
 
+  <!-- Lightbox Modal for Full View -->
+  <div id="lightbox" class="lightbox-modal" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="Dashboard Full View">
+  </div>
+
   <script>
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      const panel = document.getElementById('tab-' + tabId);
+      if (!panel) return;
+      const card = panel.closest('.card');
+      if (!card) return;
+      card.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
 
-      const selectedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      const selectedBtn = Array.from(card.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick')?.includes(tabId));
       if (selectedBtn) selectedBtn.classList.add('active');
-
-      const selectedPanel = document.getElementById('tab-' + tabId);
-      if (selectedPanel) selectedPanel.classList.add('active');
+      panel.classList.add('active');
     }
+
+    function openLightbox(src) {
+      const lightbox = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+      const lightbox = document.getElementById('lightbox');
+      lightbox.classList.remove('active');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
 
     function copySnippet(button, snippetId) {
       const codeElement = document.getElementById(snippetId);
