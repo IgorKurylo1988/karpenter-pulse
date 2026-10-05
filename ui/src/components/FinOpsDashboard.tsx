@@ -501,7 +501,7 @@ export const FinOpsDashboard: React.FC<FinOpsDashboardProps> = ({
                 <Radar name="Utilization" dataKey="utilization" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#090a0f', border: '1px solid var(--border-color)', borderRadius: '0.5rem', fontSize: '0.8rem' }}
-                  formatter={(val: any, _: any, item: any) => [`${item.payload.rawCount} active node(s)`, 'Fleet Count']}
+                  formatter={(_val: any, _: any, item: any) => [`${item.payload.rawCount} active node(s)`, 'Fleet Count']}
                 />
               </RadarChart>
             </ResponsiveContainer>

@@ -8,12 +8,11 @@ import {
   HardDrive, 
   AlertTriangle, 
   Sun, 
-  Moon,
-  TrendingDown
+  Moon
 } from 'lucide-react';
 
 // Shared Types
-import type { NodePool, EC2NodeClass, NodeClaim, K8sNode, UnscheduledPod, SpotAlert, LogEntry, PricingSummary, LogQueryResponse } from './types';
+import type { NodePool, EC2NodeClass, NodeClaim, K8sNode, UnscheduledPod, SpotAlert, LogEntry } from './types';
 
 // Modular Components
 import { MetricCard } from './components/MetricCard';
@@ -26,7 +25,6 @@ import { NodeClaimList } from './components/NodeClaimList';
 import { PendingPodsList } from './components/PendingPodsList';
 import { ResourceInspector } from './components/ResourceInspector';
 import { LogsConsole } from './components/LogsConsole';
-import { FinOpsDashboard } from './components/FinOpsDashboard';
 
 import './App.css';
 
