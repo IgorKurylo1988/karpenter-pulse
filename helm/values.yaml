@@ -10,7 +10,7 @@ backend:
   replicaCount: 1
 
   image:
-    repository: europe-north1-docker.pkg.dev/GCP_PROJECT_ID/karpenter-pulse/server
+    repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/server
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
@@ -59,7 +59,7 @@ frontend:
   replicaCount: 1
 
   image:
-    repository: europe-north1-docker.pkg.dev/GCP_PROJECT_ID/karpenter-pulse/ui
+    repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/ui
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""

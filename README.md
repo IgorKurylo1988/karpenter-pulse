@@ -4,6 +4,8 @@ Karpenter Pulse is a real-time visualization dashboard and monitor for Kubernete
 
 The project is structured as a decoupled microservices architecture (React UI frontend + Go API backend) packaged and deployed via a single, unified **Helm Chart**.
 
+![Karpenter Pulse Overview Dashboard](docs/images/dashboard-overview.png)
+
 ---
 
 ## Directory Structure
@@ -68,7 +70,7 @@ The unified Helm chart (`/helm`) deploys the complete Karpenter Pulse applicatio
 Add the Karpenter Pulse Helm chart repository:
 
 ```bash
-helm repo add karpenter-pulse https://igorkurylo1988.github.io/karpenter-pulse/
+helm repo add karpenter-pulse https://karpenter-pulse.kurigor.com/
 helm repo update
 ```
 
@@ -83,7 +85,7 @@ helm install karpenter-pulse karpenter-pulse/karpenter-pulse \
 ### Option 2: OCI Registry (Google Artifact Registry)
 
 ```bash
-helm install karpenter-pulse oci://europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/karpenter-pulse \
+helm install karpenter-pulse oci://europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/karpenter-pulse \
   --version 1.0.0 \
   --namespace karpenter-pulse \
   --create-namespace
@@ -119,7 +121,7 @@ backend:
   replicaCount: 1
 
   image:
-    repository: europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/server
+    repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/server
     pullPolicy: IfNotPresent
     tag: "1.0.0" # Defaults to Chart appVersion if omitted
 
@@ -157,7 +159,7 @@ frontend:
   replicaCount: 1
 
   image:
-    repository: europe-north1-docker.pkg.dev/<PROJECT_ID>/karpenter-pulse/ui
+    repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/ui
     pullPolicy: IfNotPresent
     tag: "1.0.0" # Defaults to Chart appVersion if omitted
 
