@@ -1,0 +1,134 @@
+name: AWS EKS Karpenter Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to execute'
+        required: true
+        type: choice
+        default: 'deploy-and-test'
+        options:
+          - 'deploy-and-test'
+          - 'test-scale'
+          - 'cleanup'
+      cluster_name:
+        description: 'EKS Cluster Name'
+        required: true
+        default: 'karpenter-pulse-test'
+      aws_region:
+        description: 'AWS Region (eu-west-1 or il-central-1)'
+        required: true
+        type: choice
+        default: 'eu-west-1'
+        options:
+          - 'eu-west-1'
+          - 'il-central-1'
+          - 'us-east-1'
+      karpenter_version:
+        description: 'Karpenter Helm Version'
+        required: true
+        default: '1.2.0'
+      scale_replicas:
+        description: 'Inflate workload replicas for scaling test'
+        required: false
+        default: '5'
+
+permissions:
+  id-token: write # Required for AWS OIDC authentication
+  contents: read  # Required to checkout the repository
+
+jobs:
+  eks-karpenter-test:
+    name: ${{ inputs.action }} (${{ inputs.cluster_name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::670412093381:role/github-actions
+          aws-region: ${{ inputs.aws_region }}
+          role-session-name: GitHubActions-KarpenterPulseTest
+
+      - name: Verify AWS Identity
+        run: |
+          echo "Verifying AWS authentication..."
+          aws sts get-caller-identity
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.35.0'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.16.0'
+
+      - name: Setup eksctl
+        run: |
+          ARCH=amd64
+          PLATFORM=$(uname -s)_$ARCH
+          curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+          tar -xzf "eksctl_$PLATFORM.tar.gz" -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+      - name: Prepare Test Scripts
+        run: |
+          chmod +x test/*.sh
+
+      # -----------------------------------------------------------------------
+      # Action: deploy-and-test
+      # -----------------------------------------------------------------------
+      - name: Deploy EKS Cluster, Karpenter & Karpenter Pulse
+        if: ${{ inputs.action == 'deploy-and-test' }}
+        run: |
+          ./test/deploy.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.karpenter_version }}"
+
+      - name: Run Autoscaling Test
+        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
+        run: |
+          aws eks update-kubeconfig --name "${{ inputs.cluster_name }}" --region "${{ inputs.aws_region }}"
+          ./test/test-scale.sh "${{ inputs.scale_replicas }}"
+
+      - name: Verify Cluster State & NodeClaims
+        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
+        run: |
+          echo "============================================="
+          echo "  Nodes in Cluster"
+          echo "============================================="
+          kubectl get nodes -o wide
+          echo ""
+          echo "============================================="
+          echo "  Karpenter NodePools"
+          echo "============================================="
+          kubectl get nodepools -o wide || true
+          echo ""
+          echo "============================================="
+          echo "  Karpenter NodeClaims"
+          echo "============================================="
+          kubectl get nodeclaims -o wide || true
+          echo ""
+          echo "============================================="
+          echo "  Karpenter Controller Pods"
+          echo "============================================="
+          kubectl get pods -n karpenter -o wide
+          echo ""
+          echo "============================================="
+          echo "  Karpenter Pulse Pods"
+          echo "============================================="
+          kubectl get pods -n karpenter-pulse -o wide
+
+      # -----------------------------------------------------------------------
+      # Action: cleanup
+      # -----------------------------------------------------------------------
+      - name: Teardown & Clean Up All AWS Resources
+        if: ${{ inputs.action == 'cleanup' }}
+        run: |
+          ./test/cleanup.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}"
