@@ -30,6 +30,13 @@ iam:
     - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerResourceDiscoveryPolicy-${CLUSTER_NAME}
     - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerZonalShiftPolicy-${CLUSTER_NAME}
     roleOnly: true
+  - metadata:
+      name: karpenter-pulse
+      namespace: karpenter-pulse
+    roleName: ${CLUSTER_NAME}-karpenter-pulse
+    attachPolicyARNs:
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterPulseSQSPolicy-${CLUSTER_NAME}
+    roleOnly: true
 
 iamIdentityMappings:
 - arn: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterNodeRole-${CLUSTER_NAME}"
@@ -42,6 +49,6 @@ managedNodeGroups:
 - instanceType: ${INSTANCE_TYPE}
   amiFamily: AmazonLinux2023
   name: ${CLUSTER_NAME}-ng
-  desiredCapacity: 2
+  desiredCapacity: 3
   minSize: 1
   maxSize: 5

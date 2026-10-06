@@ -20,6 +20,8 @@ arn:aws:iam::670412093381:role/github-actions
    - **Action**: 
      - `deploy-and-test`: Spins up the CloudFormation IAM stack, EKS cluster, installs Karpenter v1 and Karpenter Pulse, and executes an autoscaling test.
      - `create-nodegroup`: Spins up the EKS managed worker nodes (e.g. `t3.micro`) if an existing cluster has 0 nodes.
+     - `create-sqs-role`: Provisions the SQS Interruption Queue, EventBridge rules, and IRSA IAM role for Karpenter Pulse.
+     - `install-karpenter-pulse`: Deploys or upgrades only the Karpenter Pulse Helm chart (Web UI + Go Backend) on the active cluster.
      - `test-scale`: Triggers a workload scale-up or scale-down on an existing cluster.
      - `cleanup`: Destroys the EKS cluster, node groups, IAM roles, SQS queues, and EventBridge rules to avoid costs.
    - **Cluster Name**: `karpenter-pulse-test` (default)

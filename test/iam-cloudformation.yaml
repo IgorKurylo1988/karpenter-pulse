@@ -294,6 +294,28 @@ Resources:
             }
           ]
         }
+  PulseSQSPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "KarpenterPulseSQSPolicy-${ClusterName}"
+      Path: /
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowPulseSQSAccess",
+              "Effect": "Allow",
+              "Resource": "${KarpenterInterruptionQueue.Arn}",
+              "Action": [
+                "sqs:DeleteMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:ReceiveMessage"
+              ]
+            }
+          ]
+        }
   ZonalShiftPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:

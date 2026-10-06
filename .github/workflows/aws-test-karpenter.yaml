@@ -11,6 +11,8 @@ on:
         options:
           - 'deploy-and-test'
           - 'create-nodegroup'
+          - 'create-sqs-role'
+          - 'install-karpenter-pulse'
           - 'test-scale'
           - 'cleanup'
       cluster_name:
@@ -104,6 +106,22 @@ jobs:
         run: |
           ./test/create-nodegroup.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.instance_type }}"
 
+      # -----------------------------------------------------------------------
+      # Action: create-sqs-role
+      # -----------------------------------------------------------------------
+      - name: Setup SQS Queue and IAM Role for Karpenter Pulse
+        if: ${{ inputs.action == 'create-sqs-role' }}
+        run: |
+          ./test/create-pulse-sqs-role.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}"
+
+      # -----------------------------------------------------------------------
+      # Action: install-karpenter-pulse
+      # -----------------------------------------------------------------------
+      - name: Install Karpenter Pulse Helm Chart Only
+        if: ${{ inputs.action == 'install-karpenter-pulse' }}
+        run: |
+          ./test/install-pulse.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}"
+
       - name: Run Autoscaling Test
         if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
         run: |
@@ -111,7 +129,7 @@ jobs:
           ./test/test-scale.sh "${{ inputs.scale_replicas }}"
 
       - name: Verify Cluster State & NodeClaims
-        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' || inputs.action == 'create-nodegroup' }}
+        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' || inputs.action == 'create-nodegroup' || inputs.action == 'install-karpenter-pulse' }}
         run: |
           echo "============================================="
           echo "  Nodes in Cluster"

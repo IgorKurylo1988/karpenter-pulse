@@ -125,6 +125,11 @@ kubectl apply -f "${SCRIPT_DIR}/generated-nodepool.yaml"
 # 8. Deploy Karpenter Pulse & Test Workload
 echo -e "\n[8/8] Deploying Karpenter Pulse..."
 SQS_URL="https://sqs.${AWS_REGION}.amazonaws.com/${ACCOUNT_ID}/${CLUSTER_NAME}"
+PULSE_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${CLUSTER_NAME}-karpenter-pulse"
+
+# Ensure Karpenter Pulse SQS Queue & IAM Role exist
+"${SCRIPT_DIR}/create-pulse-sqs-role.sh" "$CLUSTER_NAME" "$AWS_REGION" || true
+
 helm upgrade --install karpenter-pulse "${SCRIPT_DIR}/../helm" \
   --namespace karpenter-pulse \
   --create-namespace \
@@ -132,6 +137,7 @@ helm upgrade --install karpenter-pulse "${SCRIPT_DIR}/../helm" \
   --set backend.config.clusterName="$CLUSTER_NAME" \
   --set backend.config.karpenterNamespace="$KARPENTER_NAMESPACE" \
   --set backend.config.sqsQueueUrl="$SQS_URL" \
+  --set backend.serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$PULSE_ROLE_ARN" \
   --wait
 
 kubectl apply -f "${SCRIPT_DIR}/manifests/workload-inflate.yaml"
