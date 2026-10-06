@@ -3,13 +3,13 @@ entries:
   karpenter-pulse:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-10-05T15:56:57.341242009Z"
+    created: "2026-10-06T19:22:13.175612748Z"
     description: All-in-one Helm chart for Karpenter Pulse dashboard (Frontend UI,
       Go Backend, RBAC)
-    digest: c84c4dd1da9987a5f6e19c5ca8fcfdfec3b0f58f43436a961ea20e555d99e1dd
+    digest: 000ffb99f19030c381f1c24e1dab56eea942ccc69bce4929bdafe22c75931e41
     name: karpenter-pulse
     type: application
     urls:
     - https://karpenter-pulse.kurigor.com/karpenter-pulse-1.0.0.tgz
     version: 1.0.0
-generated: "2026-10-05T15:56:57.328974114Z"
+generated: "2026-10-06T19:22:13.17506977Z"
