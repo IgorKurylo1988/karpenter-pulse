@@ -10,6 +10,10 @@ on:
       - 'karpenter-pulse-v*'
       - 'karpenter-pulse-*'
       - 'v*'
+      - '*'
+      - '**'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag_name:
@@ -40,6 +44,8 @@ jobs:
           TAG="${{ inputs.tag_name }}"
           if [ -z "$TAG" ] && [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
             TAG="${{ github.ref_name }}"
+          elif [ -z "$TAG" ] && [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
           fi
           echo "tag_name=$TAG" >> $GITHUB_OUTPUT
           echo "Resolved Tag Name: '$TAG'"
@@ -49,6 +55,9 @@ jobs:
         with:
           ref: master # Check out master branch to allow committing updates directly to it
           fetch-depth: 0
+
+      - name: Fetch all git tags
+        run: git fetch --tags --force
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -74,7 +83,7 @@ jobs:
           
           # Using [skip ci] in the commit message ensures we do not trigger a recursive workflow run
           git commit -m "chore(release): sync chart version & appVersion with ${{ steps.resolve-tag.outputs.tag_name }} [skip ci]" || echo "No changes to commit"
-          git push origin HEAD:master
+          git push origin HEAD:master || (git pull --rebase origin master && git push origin HEAD:master) || echo "Failed to push chart version to master"
 
       - name: Lint Helm Chart
         run: |
@@ -118,3 +127,15 @@ jobs:
           publish_branch: gh-pages
           publish_dir: .gh-pages-repo
           keep_files: true
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: steps.resolve-tag.outputs.tag_name != ''
+        with:
+          tag_name: ${{ steps.resolve-tag.outputs.tag_name }}
+          name: Release ${{ steps.resolve-tag.outputs.tag_name }}
+          files: /tmp/karpenter-pulse-*.tgz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
