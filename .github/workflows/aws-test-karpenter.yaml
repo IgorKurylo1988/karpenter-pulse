@@ -20,7 +20,7 @@ on:
         description: 'AWS Region (eu-west-1 or il-central-1)'
         required: true
         type: choice
-        default: 'eu-west-1'
+        default: 'il-central-1'
         options:
           - 'eu-west-1'
           - 'il-central-1'
