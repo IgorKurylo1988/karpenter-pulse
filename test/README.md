@@ -23,7 +23,7 @@ arn:aws:iam::670412093381:role/github-actions
      - `cleanup`: Destroys the EKS cluster, node groups, IAM roles, SQS queues, and EventBridge rules to avoid costs.
    - **Cluster Name**: `karpenter-pulse-test` (default)
    - **AWS Region**: `eu-west-1` (default, or select `il-central-1`)
-   - **Karpenter Version**: `1.2.0` (default)
+   - **Karpenter Version**: `1.14.1` (default)
    - **Inflate Replicas**: `5` (default)
 
 ---

@@ -8,23 +8,40 @@ metadata:
   tags:
     karpenter.sh/discovery: ${CLUSTER_NAME}
 
+# Pack pods onto fewer nodes so pod placement aligns with Karpenter's bin-packing
+# and consolidation. See https://karpenter.sh/docs/concepts/scheduling/#kube-scheduler-settings
+kubeSchedulerConfig:
+  nodeResourcesFit:
+    scoringStrategy:
+      type: MostAllocated
+
 iam:
   withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: karpenter
+      namespace: "${KARPENTER_NAMESPACE}"
+    roleName: ${CLUSTER_NAME}-karpenter
+    attachPolicyARNs:
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerNodeLifecyclePolicy-${CLUSTER_NAME}
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerIAMIntegrationPolicy-${CLUSTER_NAME}
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerEKSIntegrationPolicy-${CLUSTER_NAME}
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerInterruptionPolicy-${CLUSTER_NAME}
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerResourceDiscoveryPolicy-${CLUSTER_NAME}
+    - arn:aws:iam::${AWS_ACCOUNT_ID}:policy/KarpenterControllerZonalShiftPolicy-${CLUSTER_NAME}
+    roleOnly: true
 
-accessConfig:
-  authenticationMode: API_AND_CONFIG_MAP
-  bootstrapClusterCreatorAdminPermissions: true
-  accessEntries:
-    - principalARN: arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterNodeRole-${CLUSTER_NAME}
-      type: EC2_LINUX
+iamIdentityMappings:
+- arn: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterNodeRole-${CLUSTER_NAME}"
+  username: system:node:{{EC2PrivateDNSName}}
+  groups:
+  - system:bootstrappers
+  - system:nodes
 
 managedNodeGroups:
-  - name: system-nodes
-    instanceType: t3.medium
-    minSize: 1
-    maxSize: 3
-    desiredCapacity: 2
-    volumeSize: 20
-    privateNetworking: false
-    tags:
-      karpenter.sh/discovery: ${CLUSTER_NAME}
+- instanceType: t3.medium
+  amiFamily: AmazonLinux2023
+  name: ${CLUSTER_NAME}-ng
+  desiredCapacity: 2
+  minSize: 1
+  maxSize: 5

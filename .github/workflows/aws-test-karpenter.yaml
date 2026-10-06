@@ -28,7 +28,7 @@ on:
       karpenter_version:
         description: 'Karpenter Helm Version'
         required: true
-        default: '1.2.0'
+        default: '1.14.1'
       scale_replicas:
         description: 'Inflate workload replicas for scaling test'
         required: false
@@ -118,7 +118,7 @@ jobs:
           echo "============================================="
           echo "  Karpenter Controller Pods"
           echo "============================================="
-          kubectl get pods -n karpenter -o wide
+          kubectl get pods -A -l app.kubernetes.io/name=karpenter -o wide
           echo ""
           echo "============================================="
           echo "  Karpenter Pulse Pods"
