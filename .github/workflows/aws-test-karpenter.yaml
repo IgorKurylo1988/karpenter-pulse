@@ -10,6 +10,7 @@ on:
         default: 'deploy-and-test'
         options:
           - 'deploy-and-test'
+          - 'create-nodegroup'
           - 'test-scale'
           - 'cleanup'
       cluster_name:
@@ -95,6 +96,14 @@ jobs:
         run: |
           ./test/deploy.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.karpenter_version }}" "${{ inputs.instance_type }}"
 
+      # -----------------------------------------------------------------------
+      # Action: create-nodegroup
+      # -----------------------------------------------------------------------
+      - name: Spin Up Managed NodeGroup
+        if: ${{ inputs.action == 'create-nodegroup' }}
+        run: |
+          ./test/create-nodegroup.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.instance_type }}"
+
       - name: Run Autoscaling Test
         if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
         run: |
@@ -102,7 +111,7 @@ jobs:
           ./test/test-scale.sh "${{ inputs.scale_replicas }}"
 
       - name: Verify Cluster State & NodeClaims
-        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
+        if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' || inputs.action == 'create-nodegroup' }}
         run: |
           echo "============================================="
           echo "  Nodes in Cluster"

@@ -85,6 +85,15 @@ fi
 # Update kubeconfig
 aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
 
+# Verify worker nodes exist, if 0 nodes, spin up managed nodegroup!
+NODE_COUNT=$(kubectl get nodes --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+if [ -z "$NODE_COUNT" ] || [ "$NODE_COUNT" -eq 0 ]; then
+  echo "  ⚠️ Cluster '$CLUSTER_NAME' has 0 worker nodes. Spinning up managed nodegroup..."
+  "${SCRIPT_DIR}/create-nodegroup.sh" "$CLUSTER_NAME" "$AWS_REGION" "$INSTANCE_TYPE"
+else
+  echo "  ✅ Cluster has $NODE_COUNT worker node(s) present."
+fi
+
 # 5. Verify IRSA Role
 KARPENTER_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${CLUSTER_NAME}-karpenter"
 echo -e "\n[5/8] Karpenter Controller IRSA role: $KARPENTER_ROLE_ARN"
