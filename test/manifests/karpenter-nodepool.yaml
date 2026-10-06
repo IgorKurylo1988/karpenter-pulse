@@ -15,12 +15,9 @@ spec:
         - key: karpenter.sh/capacity-type
           operator: In
           values: ["on-demand", "spot"]
-        - key: karpenter.k8s.aws/instance-category
+        - key: node.kubernetes.io/instance-type
           operator: In
-          values: ["c", "m", "r", "t"]
-        - key: karpenter.k8s.aws/instance-generation
-          operator: Gt
-          values: ["2"]
+          values: ["t3.micro", "t2.micro"]
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass

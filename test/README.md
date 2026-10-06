@@ -39,7 +39,7 @@ The workflow and scripts automate:
    - Kubernetes version `1.31` with IAM OIDC provider enabled.
    - Subnets and security groups tagged with `karpenter.sh/discovery: ${CLUSTER_NAME}`.
    - **EKS Access Entries** (`API_AND_CONFIG_MAP`) mapping `KarpenterNodeRole` as `EC2_LINUX`.
-   - Small managed node group (`system-nodes`: 2 × `t3.medium`) to host CoreDNS, Karpenter controller, and Karpenter Pulse.
+   - Small managed node group (`system-nodes`: 2 × `t3.micro`, Free Tier eligible) to host CoreDNS, Karpenter controller, and Karpenter Pulse.
 3. **Karpenter v1 Controller & CRDs:**
    - Deployed via official Helm OCI (`oci://public.ecr.aws/karpenter/karpenter`).
    - `NodePool` & `EC2NodeClass` targeting Spot & On-Demand instances with AL2023.

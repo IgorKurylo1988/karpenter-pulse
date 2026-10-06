@@ -9,6 +9,7 @@ set -euo pipefail
 CLUSTER_NAME="${1:-${CLUSTER_NAME:-karpenter-pulse-test}}"
 AWS_REGION="${2:-${AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}}"
 KARPENTER_VERSION="${3:-${KARPENTER_VERSION:-1.14.1}}"
+INSTANCE_TYPE="${4:-${INSTANCE_TYPE:-t3.micro}}"
 KARPENTER_NAMESPACE="${KARPENTER_NAMESPACE:-kube-system}"
 K8S_VERSION="${K8S_VERSION:-1.35}"
 
@@ -45,6 +46,7 @@ fi
 echo "  ✅ AWS Account ID:     $ACCOUNT_ID"
 echo "  ✅ Target Region:      $AWS_REGION"
 echo "  ✅ Target Cluster:     $CLUSTER_NAME"
+echo "  ✅ Instance Type:      $INSTANCE_TYPE (Free Tier eligible)"
 echo "  ✅ Kubernetes Version: $K8S_VERSION"
 echo "  ✅ Karpenter Version:  $KARPENTER_VERSION"
 
@@ -72,6 +74,7 @@ if ! aws eks describe-cluster --name "$CLUSTER_NAME" --region "$AWS_REGION" >/de
       -e "s/\${AWS_REGION}/$AWS_REGION/g" \
       -e "s/\${AWS_ACCOUNT_ID}/$ACCOUNT_ID/g" \
       -e "s/\${KARPENTER_NAMESPACE}/$KARPENTER_NAMESPACE/g" \
+      -e "s/\${INSTANCE_TYPE}/$INSTANCE_TYPE/g" \
       "${SCRIPT_DIR}/cluster-template.yaml" > "${SCRIPT_DIR}/generated-cluster.yaml"
 
   eksctl create cluster -f "${SCRIPT_DIR}/generated-cluster.yaml"
@@ -96,10 +99,10 @@ helm upgrade --install karpenter oci://public.ecr.aws/karpenter/karpenter \
   --create-namespace \
   --set "settings.clusterName=${CLUSTER_NAME}" \
   --set "settings.interruptionQueue=${CLUSTER_NAME}" \
-  --set controller.resources.requests.cpu=1 \
-  --set controller.resources.requests.memory=1Gi \
-  --set controller.resources.limits.cpu=1 \
-  --set controller.resources.limits.memory=1Gi \
+  --set controller.resources.requests.cpu=100m \
+  --set controller.resources.requests.memory=256Mi \
+  --set controller.resources.limits.cpu=500m \
+  --set controller.resources.limits.memory=512Mi \
   --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$KARPENTER_ROLE_ARN" \
   --wait
 

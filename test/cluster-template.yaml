@@ -39,7 +39,7 @@ iamIdentityMappings:
   - system:nodes
 
 managedNodeGroups:
-- instanceType: t3.medium
+- instanceType: ${INSTANCE_TYPE}
   amiFamily: AmazonLinux2023
   name: ${CLUSTER_NAME}-ng
   desiredCapacity: 2

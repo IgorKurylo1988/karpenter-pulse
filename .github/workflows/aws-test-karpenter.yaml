@@ -29,6 +29,10 @@ on:
         description: 'Karpenter Helm Version'
         required: true
         default: '1.14.1'
+      instance_type:
+        description: 'EC2 Instance Type for Managed NodeGroup (Free Tier eligible: t3.micro or t2.micro)'
+        required: false
+        default: 't3.micro'
       scale_replicas:
         description: 'Inflate workload replicas for scaling test'
         required: false
@@ -89,7 +93,7 @@ jobs:
       - name: Deploy EKS Cluster, Karpenter & Karpenter Pulse
         if: ${{ inputs.action == 'deploy-and-test' }}
         run: |
-          ./test/deploy.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.karpenter_version }}"
+          ./test/deploy.sh "${{ inputs.cluster_name }}" "${{ inputs.aws_region }}" "${{ inputs.karpenter_version }}" "${{ inputs.instance_type }}"
 
       - name: Run Autoscaling Test
         if: ${{ inputs.action == 'deploy-and-test' || inputs.action == 'test-scale' }}
