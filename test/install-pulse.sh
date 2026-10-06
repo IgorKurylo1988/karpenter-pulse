@@ -40,7 +40,13 @@ echo -e "\n[2/3] Configuring parameters:"
 echo "  SQS Queue URL: $SQS_URL"
 echo "  IRSA Role ARN: $PULSE_ROLE_ARN"
 
-# 4. Install or upgrade Karpenter Pulse Helm Chart
+# 4. Clean up any stuck pending release secret if prior install aborted
+if kubectl get secret -n karpenter-pulse -l "owner=helm,name=karpenter-pulse,status=pending-install" 2>/dev/null | grep -q "sh.helm.release"; then
+  echo "  ⚠️ Found pending-install Helm release secret. Cleaning it up..."
+  kubectl delete secret -n karpenter-pulse -l "owner=helm,name=karpenter-pulse,status=pending-install" || true
+fi
+
+# 5. Install or upgrade Karpenter Pulse Helm Chart
 echo -e "\n[3/3] Deploying Karpenter Pulse Helm chart..."
 helm upgrade --install karpenter-pulse "${SCRIPT_DIR}/../helm" \
   --namespace karpenter-pulse \

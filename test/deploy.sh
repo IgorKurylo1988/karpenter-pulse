@@ -130,6 +130,11 @@ PULSE_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${CLUSTER_NAME}-karpenter-pulse"
 # Ensure Karpenter Pulse SQS Queue & IAM Role exist
 "${SCRIPT_DIR}/create-pulse-sqs-role.sh" "$CLUSTER_NAME" "$AWS_REGION" || true
 
+if kubectl get secret -n karpenter-pulse -l "owner=helm,name=karpenter-pulse,status=pending-install" 2>/dev/null | grep -q "sh.helm.release"; then
+  echo "  ⚠️ Found pending-install Helm release secret. Cleaning it up..."
+  kubectl delete secret -n karpenter-pulse -l "owner=helm,name=karpenter-pulse,status=pending-install" || true
+fi
+
 helm upgrade --install karpenter-pulse "${SCRIPT_DIR}/../helm" \
   --namespace karpenter-pulse \
   --create-namespace \

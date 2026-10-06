@@ -1,0 +1,20 @@
+# Patterns to ignore when packaging and deploying Helm chart.
+# See https://helm.sh/docs/chart_template_guide/helm_ignore_file/
+
+# Version control & git
+.git/
+.gitignore
+
+# Package archives
+*.tgz
+*.tar.gz
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Documentation website & image assets
+# These are used for the GitHub Pages static site and must not be bundled into the Kubernetes Helm release secret
+images/
+index.html
+CNAME
