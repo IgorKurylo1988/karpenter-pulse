@@ -13,7 +13,7 @@ backend:
     repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/server
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: v1.0.2
 
   service:
     type: ClusterIP
@@ -73,7 +73,7 @@ frontend:
     repository: europe-north1-docker.pkg.dev/karpenter-pulse/karpenter-pulse/ui
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: v1.0.2
 
   service:
     type: ClusterIP
